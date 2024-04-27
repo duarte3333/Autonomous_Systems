@@ -1,0 +1,2 @@
+my_turtle_package
+-DCATKIN_DEVEL_PREFIX=/home/duarte/Documents/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/duarte/Documents/catkin_ws/install -G Unix Makefiles

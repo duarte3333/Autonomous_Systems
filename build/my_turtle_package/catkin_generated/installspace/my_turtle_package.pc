@@ -1,0 +1,8 @@
+prefix=/home/duarte/Documents/catkin_ws/install
+
+Name: my_turtle_package
+Description: Description of my_turtle_package
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
