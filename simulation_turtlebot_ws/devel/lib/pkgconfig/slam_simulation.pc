@@ -1,0 +1,8 @@
+prefix=/home/duarte/Documents/simulation_turtlebot/devel
+
+Name: slam_simulation
+Description: Description of slam_simulation
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

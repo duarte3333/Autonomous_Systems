@@ -12,7 +12,8 @@ class ArucoSLAM:
     def __init__(self):
         self.calibrate_camera()
         rospy.init_node('aruco_slam') # Initialize the ROS node
-        self.image_sub = rospy.Subscr# Calibrate the cameraiber("/camera/image_raw", Image, self.image_callback)
+        self.image_sub = rospy.SubscribeListener("/camera/image_raw", Image, self.image_callback)
+        # Calibrate the cameraiber("/camera/image_raw", Image, self.image_callback)
         self.bridge = CvBridge() # Initialize the CvBridge object
         self.aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)
         self.parameters = aruco.DetectorParameters_create()
