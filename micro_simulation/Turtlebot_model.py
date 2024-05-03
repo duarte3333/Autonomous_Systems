@@ -23,7 +23,7 @@ class TurtleBot3Waffle:
 
         #parameters for noise in the odometry
         self.mean = 0  # Mean of the Gaussian distribution
-        self.std_dev = 0.001  # Standard deviation of the Gaussian distribution
+        self.std_dev = 0.01  # Standard deviation of the Gaussian distribution
 
 
     def move(self, linear_velocity, angular_velocity, delta_time):
@@ -61,11 +61,13 @@ class TurtleBot3Waffle:
         Rotation = angular_velocity * delta_time
         odometry_left = Translation - Rotation*self.wheel_base/2 #this is given in meters
         odometry_right = Translation + Rotation*self.wheel_base/2 #this is given in meters
-        gaussian_noise = np.random.normal(self.mean, self.std_dev, 2)
+        gaussian_noise_left = np.random.normal(0, self.std_dev*odometry_left, 1)
+        gaussian_noise_right = np.random.normal(0, self.std_dev*odometry_right, 1)
+
         if self.Odometry_noise==False:
             gaussian_noise=[0,0]
-        self.odometry_left += odometry_left + gaussian_noise[0]
-        self.odometry_right +=  odometry_right + gaussian_noise[1]
+        self.odometry_left += odometry_left + gaussian_noise_left
+        self.odometry_right +=  odometry_right + gaussian_noise_right
 
     def check_landmarks(self, landmarks, ):
         indices_in_sight = []
