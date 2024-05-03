@@ -2,7 +2,7 @@ import pygame
 import math 
 import numpy as np
 from Turtlebot_model import TurtleBot3Waffle
-from aux import distance
+from micro_simulation.aux_1 import distance
 
 class Simulation:
         

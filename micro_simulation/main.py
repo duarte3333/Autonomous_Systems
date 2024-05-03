@@ -2,7 +2,7 @@ import numpy as np
 import pygame
 from FastSlam import FastSlam
 from Simulation import Simulation
-from aux import *
+from micro_simulation.aux_1 import *
 
 #Instruções para usar este microsimulador:
 """ 
