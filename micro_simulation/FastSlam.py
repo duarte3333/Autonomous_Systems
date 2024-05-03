@@ -12,6 +12,7 @@ class FastSlam:
         self.WHITE = (255, 255, 255)
         self.GREEN = (0, 160, 0)
         self.BLUE=(10,10,255)
+        self.RED=(170,0,0)
 
         # Set up the screen
         self.screen = screen
@@ -31,8 +32,7 @@ class FastSlam:
 
         self.num_particles = num_particles
         self.particles = self.initialize_particles()
-        self.old_odometry = (0,0)
-
+        self.best_particle_ID=-1
 
 
         #initialize FastSlam variables
@@ -53,23 +53,50 @@ class FastSlam:
         return particles
     
    
+    def update_odometry(self,odometry):
+        # Update each particle with motion and observation models
+        for particle in self.particles:
+            # Motion update
+            particle.motion_model(odometry)
+            
+        self.update_screen()
+
+
+        
+    def resample(self, landmarks_in_sight):
+        weight=[]
+        for particle in self.particles:
+            weight.append(particle.compute_weight(landmarks_in_sight))
+        
+        #define self.best_particle_ID
+        #use weight list to resample particles
+        #...
+
+
+
+
+
 
     def compute(self, odometry, landmarks_in_sight):
         #compute and display FastSlam
-
-
-
+        self.update_odometry(odometry)
+        # Landmark update
+        for landmark in landmarks_in_sight:
+            landmark_position_x, landmark_position_y, landmark_id = landmark
+            for particle in self.particles:
+                particle.update_landmark(landmark_position_x, landmark_position_y, landmark_id)
+        
+        self.resample(landmarks_in_sight)
         #use latest estimation to update_screen
         #update_screen(x_predicted,y_predicted,theta_predicted)
-        self.update_screen(0,0,0)
-        return
-
-
-    def update_screen(self, x, y, theta):
+        self.update_screen()
         
+
+
+    def update_screen(self):
+        x,y,theta= self.particles[self.best_particle_ID].pose
         # Calculate the vertices of the triangle for orientation
         turtlebot_pos= (int((x +  self.width_meters/2) * self.SCREEN_WIDTH/self.width_meters +self.left_coordinate), int((y +self.height_meters/2) *self.SCREEN_HEIGHT/self.height_meters)) #window should display a 5x5 m^2 area
-        
         triangle_length = 0.8*self.turtlebot_radius_pixel
         triangle_tip_x = turtlebot_pos[0] + triangle_length * math.cos(theta)
         triangle_tip_y = turtlebot_pos[1] - triangle_length * math.sin(theta)
@@ -87,4 +114,10 @@ class FastSlam:
         pygame.draw.circle(self.screen, self.GREEN, turtlebot_pos , self.turtlebot_radius_pixel)
         pygame.draw.polygon(self.screen, self.BLUE, triangle_points)
         pygame.display.flip()
+
+        #draw current particles
+        for particle in self.particles:
+            particle_x , particle_y, _ = particle.pose
+            pygame.draw.circle(self.screen, self.RED, (int((particle_x +  self.width_meters/2) * self.SCREEN_WIDTH/self.width_meters + self.left_coordinate), int((particle_y+self.height_meters/2)* self.SCREEN_HEIGHT/self.height_meters)), 1)
+        
     

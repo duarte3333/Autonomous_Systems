@@ -30,10 +30,16 @@ def run_simulation_main():
     landmarks = create_landmarks(nr_landmarks,size_m,size_m)
     sim=Simulation(size_m, size_m,window_size_pixel, Odometry_noise, sample_rate, central_bar_width)
     my_slam = FastSlam(window_size_pixel, sample_rate, size_m, central_bar_width, sim.get_screen())
-
+    count=0
     while sim.get_running():
         sim.loop_iteration(landmarks)
-        my_slam.compute(sim.get_odometry(),sim.get_Landmarks_in_sight(landmarks, "Relative_pose") )
+        if count<10:
+            my_slam.update_odometry(sim.get_odometry())
+            count+=1
+        else: #update landmarks with less frequency than the odometry
+            my_slam.compute(sim.get_odometry(),sim.get_Landmarks_in_sight(landmarks, "Relative_pose") )
+            count=0
+        
         #print('Odometry:', sim.get_odometry() )  THIS IS USED TO GET ODOMETRY
         #print('Landmarks in sight ', sim.get_Landmarks_in_sight(landmarks, "Relative_pose")) #THIS IS USED TO GET LANDMARKS POSITION
 

@@ -14,13 +14,13 @@ class Particle:
     def __init__(self, pose,turtlebot_L,std_dev_motion=0.2 ,is_turtlebot=False):
         self.pose = pose
         self.is_turtlebot = is_turtlebot
-        self.landmarks = []
+        self.landmarks = {}
         self.weight = 1.0
         self.old_odometry = (0,0)
         self.std_dev_motion = std_dev_motion
         self.turtlebot_L=turtlebot_L
 
-    def apply_odometry(self, odometry):
+    def motion_model(self, odometry):
         """ # This function updates the particle's pose based on odometry (motion model)
         noise_level = 0.1
         self.pose[0] += odometry[0] + np.random.normal(0, noise_level)
@@ -42,9 +42,19 @@ class Particle:
 
         self.old_odometry=odometry
 
+    def update_landmark(self,landmark_position_x, landmark_position_y, landmark_id):
+        #update the Extended kalman filter that represents the landmark with this ID for this particle
+        this_landmark=self.landmarks[str(landmark_id)]
+        #change this_landmark
+        #...
+        self.landmarks[str(landmark_id)]=this_landmark
+        return
 
-
-
+    def compute_weight(self,landmarks_in_sight):
+        #compute weight
+        #...
+        return self.weight
+    
     def get_pose(self):
         return (self.pose.x, self.pose.y)
     
@@ -55,7 +65,7 @@ class Particle:
             y = SCREEN_HEIGHT
         self.pose = np.array([x, y, theta])
     
-    def check_pos
+    #def check_pos
     def forward(self, distance):
         self.pose[0] += distance * np.cos(self.pose[2]) + gauss_noise(0, 0.1)
         self.pose[1] += distance * np.sin(self.pose[2])
