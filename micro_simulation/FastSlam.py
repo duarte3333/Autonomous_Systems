@@ -1,9 +1,12 @@
 import pygame
 import math 
+import numpy as np
+from Particule import Particle
 
 class FastSlam:
-    def __init__(self, window_size_pixel, sample_rate, size_m,central_bar_width, screen ):
-        
+    def __init__(self, window_size_pixel, sample_rate, size_m,central_bar_width, turtlebot_L, screen,std_dev_motion = 0.2, num_particles=100 ):
+        self.std_dev_motion = std_dev_motion
+
         # Define colors
         self.BLACK = (0, 0, 0)
         self.WHITE = (255, 255, 255)
@@ -19,12 +22,16 @@ class FastSlam:
         self.right_coordinate=self.SCREEN_WIDTH+self.left_coordinate+self.central_bar_width
         self.width_meters=size_m 
         self.height_meters=size_m
-        self.turtlebot_radius=0.105 
+        self.turtlebot_radius=0.105
+        self.turtlebot_L=turtlebot_L
+ 
         self.turtlebot_radius_pixel =self.turtlebot_radius * self.SCREEN_WIDTH/self.width_meters #from turtlebot website
 
         self.update_screen(0,0,0)
 
-
+        self.num_particles = num_particles
+        self.particles = self.initialize_particles()
+        self.old_odometry = (0,0)
 
 
 
@@ -33,6 +40,20 @@ class FastSlam:
 
 
         return
+    
+    def initialize_particles(self, landmarks={}):
+        particles = []
+        for _ in range(self.num_particles):
+            # Initialize each particle with a random pose and empty landmarks
+            x = np.random.uniform(0, self.width_meters)
+            y = np.random.uniform(0, self.height_meters)
+            theta = np.random.uniform(0, 2 * np.pi)
+            pose = np.array([x, y, theta])
+            particles.append(Particle(pose, landmarks, self.turtlebot_L,self.std_dev_motion ))
+        return particles
+    
+   
+
     def compute(self, odometry, landmarks_in_sight):
         #compute and display FastSlam
 

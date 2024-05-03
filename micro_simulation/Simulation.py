@@ -8,6 +8,7 @@ class Simulation:
         
     def __init__(self, width_meters=5, height_meters=5, size_pixel=800, Odometry_noise=True, sample_rate=60, central_bar_width=10):
         pygame.init()
+
         # Define colors
         self.BLACK = (0, 0, 0)
         self.WHITE = (255, 255, 255)
@@ -36,6 +37,7 @@ class Simulation:
         self.running=True
         self.clock = pygame.time.Clock()
 
+        self.std_dev_landmark = 0.05
     def loop_iteration(self, landmarks):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -113,7 +115,7 @@ class Simulation:
         #print("indices_in_sight", self.indices_in_sight)
         if abs_or_relative=="Absolute_pose":
             for indice in self.indices_in_sight:
-                Landmarks_in_sight.append(landmarks[indice])
+                Landmarks_in_sight.append([landmarks[indice][0], landmarks[indice][1], indice])
         elif abs_or_relative=="Relative_pose":
             my_x, my_y = self.turtlebot.get_position()
             my_x, my_y =  my_x + self.width_meters/2, my_y + self.height_meters/2
@@ -122,15 +124,19 @@ class Simulation:
             for indice in self.indices_in_sight:
                 landmark_x=landmarks[indice][0]
                 landmark_y=landmarks[indice][1]
+                landmark_ID=landmarks[indice][2]
+
                 angle_to_landmark = -math.atan2(landmark_y - my_y, landmark_x - my_x)
-                angle_difference = my_theta - angle_to_landmark
+                beta = my_theta - angle_to_landmark
+
                 #print(my_theta, " ", angle_to_landmark)
                 distance_to_landmark = distance([my_x, my_y],landmarks[indice])
                 #print("dist ",distance_to_landmark)
 
-                x_rel = distance_to_landmark * math.cos(angle_difference)
-                y_rel = distance_to_landmark * math.sin(angle_difference)                
-                Landmarks_in_sight.append((x_rel,y_rel))
+                #x_rel = distance_to_landmark * math.cos(angle_difference)
+                #y_rel = distance_to_landmark * math.sin(angle_difference)    
+                noise_angle =  np.random.normal(0, self.std_dev_landmark*beta, 1)
+                noise_dist= np.random.normal(0, self.std_dev_landmark*distance_to_landmark, 1)
+                Landmarks_in_sight.append((distance_to_landmark + noise_dist ,beta + noise_angle, landmark_ID))
 
         return np.array(Landmarks_in_sight)
-    
