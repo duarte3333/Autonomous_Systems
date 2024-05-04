@@ -1,5 +1,7 @@
 import math
 import numpy as np
+import random
+from aux_slam import *
 
 class TurtleBot3Waffle:
     def __init__(self, time_interval,Odometry_noise,width_meters, height_meters,turtlebot_radius, x=0, y=0, theta=0):
@@ -29,6 +31,7 @@ class TurtleBot3Waffle:
     def move(self, linear_velocity, angular_velocity, delta_time):
         if not delta_time:
             delta_time=self.delta_time
+            
         #checks if velocity is out of range
         if abs(angular_velocity)>self.maxAngularVel:
             angular_velocity = self.maxAngularVel * angular_velocity/(abs(angular_velocity)) #mantains sign of angular velocity
@@ -37,6 +40,7 @@ class TurtleBot3Waffle:
 
         old_x=self.x
         old_y=self.y
+        
         #kinematics
         v_x = linear_velocity * math.cos(self.theta)
         v_y = linear_velocity * math.sin(self.theta)
@@ -69,7 +73,7 @@ class TurtleBot3Waffle:
         self.odometry_left += odometry_left + gaussian_noise_left
         self.odometry_right +=  odometry_right + gaussian_noise_right
 
-    def check_landmarks(self, landmarks, ):
+    def check_landmarks(self, landmarks):
         indices_in_sight = []
         my_x = self.x + self.width_meters/2
         my_y = self.y +  self.height_meters/2
@@ -100,5 +104,25 @@ class TurtleBot3Waffle:
     def get_odometry(self):
         return self.odometry_left, self.odometry_right
 
+    def collect_data(self, landmarks):
+        """ random sample of landmarks to simulate the data collected by the turtlebot"""
+        data_collected = []
+        
+        for i in random.sample(range(0, len(landmarks))):
+            landmark = landmarks[i]
+            landmark_x, landmark_y = landmark
+            
+            #Distance
+            distance = euclidean_distance((self.x, self.y), (landmark_x, landmark_y))
+            noise_distance = gauss_noise(distance, 0.05)
+            if (distance + noise_distance) > 0:
+                distance += noise_distance
+            
+            #Angle
+            angle_to_landmark = -math.atan2(landmark_y - self.y, landmark_x - self.x)
+            angle_difference = abs(math.degrees(self.theta - angle_to_landmark))
+            data_collected.append([distance, angle_difference, ])
+            
+        return data_collected
 
     
