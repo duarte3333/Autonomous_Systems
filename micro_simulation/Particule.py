@@ -1,7 +1,7 @@
 import numpy as np
 import math
 
-from Simulation import SCREEN_WIDTH, SCREEN_HEIGHT
+#from Simulation import SCREEN_WIDTH, SCREEN_HEIGHT
 from aux_slam import gauss_noise
 from aux_slam import multi_normal
 from Landmark import Landmark
@@ -19,7 +19,6 @@ class Particle:
         self.is_turtlebot = is_turtlebot
         self.landmarks = {}
         self.weight = 1.0
-        self.old_odometry = (0,0)
         self.std_dev_motion = std_dev_motion
         self.turtlebot_L=turtlebot_L
         self.observation_vector = np.zeros((2,1))
@@ -28,22 +27,34 @@ class Particle:
         self.adjusted_covariance = np.zeros((2,2))
         
     ##MOTION MODEL##
-    def motion_model(self, odometry):
+    def motion_model(self, odometry_delta):
         """ This function updates the particle's pose based on odometry (motion model) """
         x, y, theta = self.pose
-        deltaRight=odometry[0]-self.old_odometry[0]
-        deltaLeft=odometry[1]-self.old_odometry[1]
+        #odometry = np.random.normal(0, self.std_dev_motion, 2)
+        #print(self.old_odometry, ' after calling')
+
+        #print('Odometry: ',odometry[0],', ',  odometry[1] ) 
+        #print('Odometry: ',self.old_odometry[0],', ',  self.old_odometry[1] , 'old') 
+
+        #deltaRight=odometry[0]-self.old_odometry[0]
+        #deltaLeft=odometry[1]-self.old_odometry[1]
+        deltaLeft = odometry_delta[0]
+        deltaRight = odometry_delta[1]
+        #print('deltas: ',deltaRight,', ',  deltaLeft ) 
+      
         deltaD =(deltaRight + deltaLeft)/2
         delta_theta=(deltaRight - deltaLeft)/self.turtlebot_L
         delta_x=deltaD*math.cos(theta)
         delta_y=deltaD*math.sin(theta)
         noise=np.random.normal(0, self.std_dev_motion, 3)
-        new_x = x + delta_x*(1+noise[1])
+        new_x = x + delta_x*(1+noise[0])
         new_y = y + delta_y*(1+noise[1])
         new_theta = (theta + delta_theta*(1+noise[2])) % (2 * np.pi)
+        #print("Particle pose delta x, y",delta_x*(1+noise[0]),delta_y*(1+noise[1]) )
+        #print('Odometry: ',deltaRight,', ',  deltaLeft ) 
         self.pose=np.array([new_x, new_y, new_theta])
 
-        self.old_odometry=odometry
+        #self.old_odometry=odometry.copy()
 
     ##WEIGHT##
     
@@ -86,8 +97,7 @@ class Particle:
         #return predicted_obs
     
     ##UPDATE##
-    def update_particle(self, odometry, collected_data):
-        self.motion_model(odometry)
+    def update_particle(self, collected_data):
         self.compute_weight(collected_data)
         
     
@@ -107,8 +117,8 @@ class Particle:
     def get_landmark(self, landmark_id):
         return self.landmarks[str(landmark_id)]
     
-    def create_landmark(self, observation):
-        distance, angle, id = observation
+    def create_landmark(self, distance, angle, id ):
+       
         x = self.pose[0] + distance * math.cos(angle + self.pose[2])
         y = self.pose[1] + distance * math.sin(angle + self.pose[2])
         self.landmarks[id] = Landmark(x, y)
@@ -119,7 +129,12 @@ class Particle:
         new_mu = landmark.mu + K_matrix.dot(obs - ass_obs)
         new_sig = (np.eye(2) - K_matrix.dot(self.J_matrix)).dot(landmark.sigma)
         landmark.update(new_mu, new_sig)
-        
     
-    def update_landmark(self, observation, landmark_id):
+    
+    def handle_landmark(self,landmark_dist, landmark_bearing_angle, landmark_id):
         ###FALTA FAZERRR###
+        if landmark_id not in self.landmarks:
+            self.create_landmark(landmark_dist, landmark_bearing_angle, landmark_id)
+        else:
+            self.update_landmark()
+        

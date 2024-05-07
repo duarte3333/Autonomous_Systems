@@ -65,11 +65,13 @@ class TurtleBot3Waffle:
         Rotation = angular_velocity * delta_time
         odometry_left = Translation - Rotation*self.wheel_base/2 #this is given in meters
         odometry_right = Translation + Rotation*self.wheel_base/2 #this is given in meters
-        gaussian_noise_left = np.random.normal(0, self.std_dev*odometry_left, 1)
-        gaussian_noise_right = np.random.normal(0, self.std_dev*odometry_right, 1)
+        gaussian_noise_left = np.random.normal(0, self.std_dev, 1)*odometry_left
+        gaussian_noise_right = np.random.normal(0, self.std_dev, 1)*odometry_right
 
         if self.Odometry_noise==False:
-            gaussian_noise=[0,0]
+            gaussian_noise_left=0
+            gaussian_noise_right=0
+        
         self.odometry_left += odometry_left + gaussian_noise_left
         self.odometry_right +=  odometry_right + gaussian_noise_right
 
@@ -102,7 +104,7 @@ class TurtleBot3Waffle:
         return self.theta
     
     def get_odometry(self):
-        return self.odometry_left, self.odometry_right
+        return [self.odometry_left, self.odometry_right]
 
     def collect_data(self, landmarks):
         """ random sample of landmarks to simulate the data collected by the turtlebot"""

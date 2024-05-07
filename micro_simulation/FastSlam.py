@@ -1,10 +1,12 @@
 import pygame
 import math 
 import numpy as np
+import copy
+
 from Particule import Particle
 
 class FastSlam:
-    def __init__(self, window_size_pixel, sample_rate, size_m,central_bar_width, turtlebot_L, screen,std_dev_motion = 0.2, num_particles=100 ):
+    def __init__(self, window_size_pixel, sample_rate, size_m,central_bar_width, turtlebot_L, screen,std_dev_motion = 0.2, num_particles=300 ):
         self.std_dev_motion = std_dev_motion
 
         # Define colors
@@ -28,12 +30,13 @@ class FastSlam:
  
         self.turtlebot_radius_pixel =self.turtlebot_radius * self.SCREEN_WIDTH/self.width_meters #from turtlebot website
 
-        self.update_screen(0,0,0)
+        self.old_odometry = [0,0]
 
         self.num_particles = num_particles
         self.particles = self.initialize_particles()
         self.best_particle_ID=-1
 
+        self.update_screen()
 
         #initialize FastSlam variables
 
@@ -49,16 +52,28 @@ class FastSlam:
             y = np.random.uniform(0, self.height_meters)
             theta = np.random.uniform(0, 2 * np.pi)
             pose = np.array([x, y, theta])
-            particles.append(Particle(pose, landmarks, self.turtlebot_L,self.std_dev_motion ))
+            particles.append(Particle(pose, self.turtlebot_L,self.std_dev_motion ))
         return particles
     
-   
+
     def update_odometry(self,odometry):
+        deltaRight=odometry[0]-self.old_odometry[0]
+        deltaLeft=odometry[1]-self.old_odometry[1]
         # Update each particle with motion and observation models
         for particle in self.particles:
             # Motion update
-            particle.motion_model(odometry)
+            #print(self.old_odometry, ' old before  calling')
+            #print(odometry, ' new before  calling')
+         
             
+            #print(deltaRight,' ' ,deltaLeft)
+            particle.motion_model([deltaLeft, deltaRight])
+
+
+            #print(self.old_odometry, ' old after  calling\n')
+
+        self.old_odometry= copy.deepcopy(odometry)
+
         self.update_screen()
 
 
@@ -77,14 +92,14 @@ class FastSlam:
 
 
 
-    def compute(self, odometry, landmarks_in_sight):
+    def compute_slam(self, odometry, landmarks_in_sight):
         #compute and display FastSlam
         self.update_odometry(odometry)
         # Landmark update
         for landmark in landmarks_in_sight:
-            landmark_position_x, landmark_position_y, landmark_id = landmark
+            landmark_dist, landmark_bearing_angle, landmark_id = landmark
             for particle in self.particles:
-                particle.update_landmark(landmark_position_x, landmark_position_y, landmark_id)
+                particle.handle_landmark(landmark_dist, landmark_bearing_angle, landmark_id)
         
         self.resample(landmarks_in_sight)
         #use latest estimation to update_screen
@@ -94,9 +109,13 @@ class FastSlam:
 
 
     def update_screen(self):
-        x,y,theta= self.particles[self.best_particle_ID].pose
+        if self.best_particle_ID==-1:
+            x,y,theta= self.width_meters/2,self.height_meters/2,0 
+
+        else:
+            x,y,theta= self.particles[self.best_particle_ID].pose
         # Calculate the vertices of the triangle for orientation
-        turtlebot_pos= (int((x +  self.width_meters/2) * self.SCREEN_WIDTH/self.width_meters +self.left_coordinate), int((y +self.height_meters/2) *self.SCREEN_HEIGHT/self.height_meters)) #window should display a 5x5 m^2 area
+        turtlebot_pos= (int((x) * self.SCREEN_WIDTH/self.width_meters +self.left_coordinate), int((y) *self.SCREEN_HEIGHT/self.height_meters)) #window should display a 5x5 m^2 area
         triangle_length = 0.8*self.turtlebot_radius_pixel
         triangle_tip_x = turtlebot_pos[0] + triangle_length * math.cos(theta)
         triangle_tip_y = turtlebot_pos[1] - triangle_length * math.sin(theta)
@@ -113,11 +132,11 @@ class FastSlam:
 
         pygame.draw.circle(self.screen, self.GREEN, turtlebot_pos , self.turtlebot_radius_pixel)
         pygame.draw.polygon(self.screen, self.BLUE, triangle_points)
-        pygame.display.flip()
+        #pygame.display.flip()
 
         #draw current particles
         for particle in self.particles:
             particle_x , particle_y, _ = particle.pose
-            pygame.draw.circle(self.screen, self.RED, (int((particle_x +  self.width_meters/2) * self.SCREEN_WIDTH/self.width_meters + self.left_coordinate), int((particle_y+self.height_meters/2)* self.SCREEN_HEIGHT/self.height_meters)), 1)
+            pygame.draw.circle(self.screen, self.RED, (int((particle_x ) * self.SCREEN_WIDTH/self.width_meters + self.left_coordinate), int((particle_y)* self.SCREEN_HEIGHT/self.height_meters)), 3)
         
     
