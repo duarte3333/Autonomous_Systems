@@ -1,4 +1,4 @@
-prefix=/home/duarte/Documents/catkin_ws/devel
+prefix=/home/duarte/Documents/AS_project/catkin_ws/devel
 
 Name: my_turtle_package
 Description: Description of my_turtle_package
