@@ -22,7 +22,7 @@ def run_simulation_main():
     #Main parameters:
     Odometry_noise= True    #Gausian noise na odometria
     window_size_pixel=1000    #tamanho da janela
-    sample_rate=2    #sample rate (Hz)
+    sample_rate=100  #sample rate (Hz)
     size_m = float(input('What should be the size of the map? n x n (in meters). n is: '))
     nr_landmarks = int(input('How many random arucu landmarks do you want in your map?'))
     central_bar_width=10

@@ -46,9 +46,9 @@ class Simulation:
                 if event.key == pygame.K_ESCAPE:
                     self.running = False
                 if event.key == pygame.K_w or event.key == pygame.K_UP:
-                    self.linear_velocity += 0.01
+                    self.linear_velocity += 0.02
                 elif event.key == pygame.K_x or event.key == pygame.K_DOWN:
-                    self.linear_velocity += -0.01
+                    self.linear_velocity += -0.02
 
                 elif event.key == pygame.K_a or event.key == pygame.K_LEFT:
                     self.angular_velocity += math.pi / 20
