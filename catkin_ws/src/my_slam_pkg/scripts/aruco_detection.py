@@ -42,6 +42,12 @@ class ArucoSLAM:
         self.dist_coeffs = dist.astype(float)
         
     def image_callback(self, data):
+
+        def cart2pol(x, y):
+            rho = np.sqrt(x**2 + y**2)
+            phi = np.arctan2(y, x)
+            return(rho, phi)
+
         try:
             # Convert the compressed image to an OpenCV format
             cv_image = self.bridge.compressed_imgmsg_to_cv2(data, "bgr8")
@@ -57,13 +63,13 @@ class ArucoSLAM:
                 cv2.polylines(cv_image, [np.int32(marker_corners)], True, (0, 255, 0), 2)  # Bounding Box
                 rvec, tvec, _ = cv2.aruco.estimatePoseSingleMarkers(corners[i], 0.1, self.camera_matrix, self.dist_coeffs)
                 markPos = -tvec.reshape((1,3))
-                bearingAng = np.arccos((np.dot(markPos, np.array([[1], [0], [0]])))/(np.linalg.norm(markPos)))*180/np.pi
-            
+                _,phi = cart2pol(tvec[0][0][2],tvec[0][0][0])
+                phi = phi *180 /np.pi            
  
                 # ID of the marker
                 cv2.putText(cv_image, str(ids[i][0]), (int(marker_corners[0][0] - 10), int(marker_corners[0][1]) - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3)
                 cv2.putText(cv_image, str(round(tvec[0][0][2], 5)), (int(marker_corners[2][0] - 80), int(marker_corners[2][1]) + 45), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
-                #cv2.putText(cv_image, 'ang='+str(round(bearingAng[0][0],3)), (int(marker_corners[1][0]-70),int(marker_corners[1][1])-10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255 ), 3)
+                cv2.putText(cv_image,  'ang='+str(round(phi,3)), (int(marker_corners[1][0]-70),int(marker_corners[1][1])-10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255 ), 3)
    
    
    
