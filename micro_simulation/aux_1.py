@@ -16,3 +16,4 @@ def create_landmarks(nr_landmarks, width, height):
         if not is_too_close(x_y_proposal, landmarks, min_distance):
             landmarks.append(tuple(x_y_proposal[0]))
     return landmarks
+

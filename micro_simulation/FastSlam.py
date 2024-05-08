@@ -2,13 +2,14 @@ import pygame
 import math 
 import numpy as np
 import copy
-
+from aux_slam import resample
 from Particule import Particle
 
 class FastSlam:
-    def __init__(self, window_size_pixel, sample_rate, size_m,central_bar_width, turtlebot_L, screen,std_dev_motion = 0.2, num_particles=300 ):
+    def __init__(self, window_size_pixel, sample_rate, size_m,central_bar_width, turtlebot_L,screen, resample_method="low variance",std_dev_motion = 0.2, num_particles=50 ):
+        
         self.std_dev_motion = std_dev_motion
-
+        self.resample_method=resample_method
         # Define colors
         self.BLACK = (0, 0, 0)
         self.WHITE = (255, 255, 255)
@@ -48,9 +49,9 @@ class FastSlam:
         particles = []
         for _ in range(self.num_particles):
             # Initialize each particle with a random pose and empty landmarks
-            x = np.random.uniform(0, self.width_meters)
-            y = np.random.uniform(0, self.height_meters)
-            theta = np.random.uniform(0, 2 * np.pi)
+            x = 0#np.random.uniform(0, self.width_meters)
+            y = 0#np.random.uniform(0, self.height_meters)
+            theta = 0#np.random.uniform(0, 2 * np.pi)
             pose = np.array([x, y, theta])
             particles.append(Particle(pose, self.turtlebot_L,self.std_dev_motion ))
         return particles
@@ -62,33 +63,9 @@ class FastSlam:
         # Update each particle with motion and observation models
         for particle in self.particles:
             # Motion update
-            #print(self.old_odometry, ' old before  calling')
-            #print(odometry, ' new before  calling')
-         
-            
-            #print(deltaRight,' ' ,deltaLeft)
             particle.motion_model([deltaLeft, deltaRight])
-
-
-            #print(self.old_odometry, ' old after  calling\n')
-
         self.old_odometry= copy.deepcopy(odometry)
-
         self.update_screen()
-
-
-        
-    def resample(self, landmarks_in_sight):
-        weight=[]
-        for particle in self.particles:
-            weight.append(particle.compute_weight(landmarks_in_sight))
-        
-        #define self.best_particle_ID
-        #use weight list to resample particles
-        #...
-
-
-
 
 
 
@@ -100,10 +77,8 @@ class FastSlam:
             landmark_dist, landmark_bearing_angle, landmark_id = landmark
             for particle in self.particles:
                 particle.handle_landmark(landmark_dist, landmark_bearing_angle, landmark_id)
-        
-        self.resample(landmarks_in_sight)
+        self.particles , self.best_particle_ID = resample(self.particles, self.num_particles, self.resample_method)
         #use latest estimation to update_screen
-        #update_screen(x_predicted,y_predicted,theta_predicted)
         self.update_screen()
         
 
@@ -137,6 +112,9 @@ class FastSlam:
         #draw current particles
         for particle in self.particles:
             particle_x , particle_y, _ = particle.pose
-            pygame.draw.circle(self.screen, self.RED, (int((particle_x ) * self.SCREEN_WIDTH/self.width_meters + self.left_coordinate), int((particle_y)* self.SCREEN_HEIGHT/self.height_meters)), 3)
-        
-    
+            pygame.draw.circle(self.screen, self.RED, (int((particle_x ) * self.SCREEN_WIDTH/self.width_meters + self.left_coordinate + self.SCREEN_WIDTH/2), int((particle_y)* self.SCREEN_HEIGHT/self.height_meters+ self.SCREEN_HEIGHT/2)), 3)
+
+
+
+
+

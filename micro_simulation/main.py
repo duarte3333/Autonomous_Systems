@@ -23,8 +23,8 @@ def run_simulation_main():
     Odometry_noise= True    #Gausian noise na odometria
     window_size_pixel=1000    #tamanho da janela
     sample_rate=100  #sample rate (Hz)
-    size_m = float(input('What should be the size of the map? n x n (in meters). n is: '))
-    nr_landmarks = int(input('How many random arucu landmarks do you want in your map?'))
+    size_m = 3#float(input('What should be the size of the map? n x n (in meters). n is: '))
+    nr_landmarks =5# int(input('How many random arucu landmarks do you want in your map?'))
     central_bar_width=10
 
     landmarks = create_landmarks(nr_landmarks,size_m,size_m)
@@ -37,7 +37,7 @@ def run_simulation_main():
             my_slam.update_odometry(sim.get_odometry())
             count+=1
         else: #update landmarks with less frequency than the odometry
-            #my_slam.compute_slam(sim.get_odometry(),sim.get_Landmarks_in_sight(landmarks, "Relative_pose") )
+            my_slam.compute_slam(sim.get_odometry(),sim.get_Landmarks_in_sight(landmarks, "Relative_pose") )
             count=0
         
         #print('Odometry:', sim.get_odometry() )  THIS IS USED TO GET ODOMETRY

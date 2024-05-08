@@ -3,6 +3,8 @@ import math
 import numpy as np
 from Turtlebot_model import TurtleBot3Waffle
 from aux_1 import *
+from aux_slam import euclidean_distance
+
 
 class Simulation:
         
@@ -124,19 +126,20 @@ class Simulation:
             for indice in self.indices_in_sight:
                 landmark_x=landmarks[indice][0]
                 landmark_y=landmarks[indice][1]
-                landmark_ID=landmarks[indice][2]
+                landmark_ID=indice
 
                 angle_to_landmark = -math.atan2(landmark_y - my_y, landmark_x - my_x)
                 beta = my_theta - angle_to_landmark
 
                 #print(my_theta, " ", angle_to_landmark)
-                distance_to_landmark = distance([my_x, my_y],landmarks[indice])
+                distance_to_landmark = euclidean_distance([my_x, my_y],landmarks[indice])
                 #print("dist ",distance_to_landmark)
 
                 #x_rel = distance_to_landmark * math.cos(angle_difference)
                 #y_rel = distance_to_landmark * math.sin(angle_difference)    
-                noise_angle =  np.random.normal(0, self.std_dev_landmark*beta, 1)
-                noise_dist= np.random.normal(0, self.std_dev_landmark*distance_to_landmark, 1)
-                Landmarks_in_sight.append((distance_to_landmark + noise_dist ,beta + noise_angle, landmark_ID))
+                noise_angle =  np.random.normal(0, self.std_dev_landmark, 1)*beta
+                noise_dist= np.random.normal(0, self.std_dev_landmark, 1)*distance_to_landmark
+                Landmarks_in_sight.append((distance_to_landmark+ noise_dist[0] ,beta + noise_angle[0], landmark_ID))
+                print('Landmarks_in_sight', Landmarks_in_sight)
 
         return np.array(Landmarks_in_sight)

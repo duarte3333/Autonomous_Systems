@@ -1,9 +1,6 @@
 import numpy as np
 import math
 
-#from Simulation import SCREEN_WIDTH, SCREEN_HEIGHT
-from aux_slam import gauss_noise
-from aux_slam import multi_normal
 from Landmark import Landmark
 from numpy import linalg #this is for the inverse of a matrix
 
@@ -68,6 +65,19 @@ class Particle:
             else:
                 #update Extended Kalman Filter
                 self.update_landmark(distance, angle_diff, landmark_id)
+
+
+
+ ##WEIGHT##
+    #[(distancia1, angle1, id), ... , (distanciaN, angleN, idN)]
+    def handle_landmark(self, landmark_dist, landmark_bearing_angle, landmark_id):
+        landmark_id = str(landmark_id)
+        if landmark_id not in self.landmarks:
+            self.create_landmark(landmark_dist, landmark_bearing_angle, landmark_id)
+        else:
+            #update Extended Kalman Filter
+            self.update_landmark(landmark_dist, landmark_bearing_angle, landmark_id)
+
 
     def create_landmark(self, distance, angle, landmark_id):
         x, y, theta = self.get_pose()
