@@ -53,23 +53,22 @@ class Particle:
 
         #self.old_odometry=odometry.copy()
 
-    ##WEIGHT##
-    #[(distancia1, angle1, id), ... , (distanciaN, angleN, idN)]
-    def compute_weight(self, collected_data):
-        """ collected_data: list of tuples (distance, angle, id)"""
-        self.weight = 1.0 #reset weight 
-        for distance, angle_diff, landmark_id in collected_data:
-            landmark_id = str(landmark_id)
-            if landmark_id not in self.landmarks:
-                self.create_landmark(distance, angle_diff, landmark_id)
-            else:
-                #update Extended Kalman Filter
-                self.update_landmark(distance, angle_diff, landmark_id)
+    # ##WEIGHT##
+    # #[(distancia1, angle1, id), ... , (distanciaN, angleN, idN)]
+    # def compute_weight(self, collected_data):
+    #     """ collected_data: list of tuples (distance, angle, id)"""
+    #     self.weight = 1.0 #reset weight 
+    #     for distance, angle_diff, landmark_id in collected_data:
+    #         landmark_id = str(landmark_id)
+    #         if landmark_id not in self.landmarks:
+    #             self.create_landmark(distance, angle_diff, landmark_id)
+    #         else:
+    #             #update Extended Kalman Filter
+    #             self.update_landmark(distance, angle_diff, landmark_id)
 
 
 
  ##WEIGHT##
-    #[(distancia1, angle1, id), ... , (distanciaN, angleN, idN)]
     def handle_landmark(self, landmark_dist, landmark_bearing_angle, landmark_id):
         landmark_id = str(landmark_id)
         if landmark_id not in self.landmarks:
