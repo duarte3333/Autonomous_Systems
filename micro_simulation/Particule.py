@@ -29,7 +29,7 @@ class Particle:
     ##MOTION MODEL##
     def motion_model(self, odometry_delta):
         """ This function updates the particle's pose based on odometry (motion model) """
-        x, y, theta = self.pose
+        x, y, theta = self.get_pose()
         #odometry = np.random.normal(0, self.std_dev_motion, 2)
         #print(self.old_odometry, ' after calling')
 
@@ -57,44 +57,73 @@ class Particle:
         #self.old_odometry=odometry.copy()
 
     ##WEIGHT##
-    
-    #[(distancia1, angle1, id), (distancia, angle, id)]
+    #[(distancia1, angle1, id), ... , (distanciaN, angleN, idN)]
     def compute_weight(self, collected_data):
-        """ data_values: list of tuples (distance, angle)"""
-                        
-        for landmark in collected_data:
-            landmark_position_x, landmark_position_y, landmark_id = landmark
-            if not str(landmark_id) in self.landmarks:
-                self.create_landmark(landmark)
-            #update Extended Kalman Filter
-            self.compute_matrixs(self.landmarks[str(landmark_id)])
-            self.update_landmark(landmark_position_x, landmark_position_y, landmark_id)
-            
-        #self.weight *= prob    
-        
-    # def associate_observation(self, observation):
-    #     prob = 0
-    #     landmark_index = -1
-    #     for landmark_id, landmark in self.landmarks.items():
-    #         predicted_obs = self.compute_matrixs(landmark)
-    #         p = multi_normal(np.transpose(np.array([observation])), predicted_obs, self.adjusted_covariance)
-    #         if (p > prob):
-    #             prob = p
-    #             landmark_index = landmark_id
-                
-    #     return prob, landmark_index
-                
-    def compute_matrixs(self, landmark):
-        dx = landmark.x - self.pose.x
-        dy = landmark.y - self.pose.y
-        d2 = dx**2 + dy**2
-        d = math.sqrt(d2)
+        """ collected_data: list of tuples (distance, angle, id)"""
+        self.weight = 1.0 #reset weight 
+        for distance, angle_diff, landmark_id in collected_data:
+            landmark_id = str(landmark_id)
+            if landmark_id not in self.landmarks:
+                self.create_landmark(distance, angle_diff, landmark_id)
+            else:
+                #update Extended Kalman Filter
+                self.update_landmark(distance, angle_diff, landmark_id)
 
-        #predicted_obs = np.array([[d],[math.atan2(dy, dx)]])
-        self.jacobian = np.array([[dx/d,   dy/d],
-                             [-dy/d2, dx/d2]])
-        self.adjusted_covariance = self.jacobian.dot(landmark.sigma).dot(np.transpose(self.jacobian)) + np.normal(0, 0.1, 2)
-        #return predicted_obs
+    def create_landmark(self, distance, angle, landmark_id):
+        x, y, theta = self.get_pose()
+        landmark_x = x + distance * math.cos(theta + angle)
+        landmark_y = y + distance * math.sin(theta + angle)
+        self.landmarks[landmark_id] = Landmark(landmark_x, landmark_y)
+    
+    def update_landmark(self, distance, angle, landmark_id):
+            """Updates an existing landmark using the EKF update step."""
+            landmark = self.landmarks[str(landmark_id)]
+            x, y, theta = self.pose
+            landmark_x = landmark.x
+            landmark_y = landmark.y
+            landmark_x = x + distance * math.cos(theta + angle)
+            landmark_y = y + distance * math.sin(theta + angle)
+            
+            # Prediction of the measurement
+            dx = landmark_x - x
+            dy = landmark_y - y
+            predicted_distance = math.sqrt(dx**2 + dy**2)
+            predicted_angle = math.atan2(dy, dx) - theta
+            
+            # Calculate Jacobian matrix H of the measurement function
+            q = dx**2 + dy**2
+            sqrt_q = math.sqrt(q)
+            J = np.array([
+                [dx / sqrt_q, dy / sqrt_q],
+                [-dy / q, -dx / q]
+            ])
+            
+            # Measurement noise covariance matrix (should be tuned)
+            Q = np.diag([0.1, 0.1])  # Example values
+
+            # Calculate the Kalman Gain
+            S = J @ landmark.sigma @ J.T + Q  # Measurement prediction covariance
+            K = landmark.sigma @ J.T @ np.linalg.inv(S)
+
+            # Innovation (measurement residual)
+            innovation = np.array([distance - predicted_distance, angle - predicted_angle])
+
+            # Update landmark state
+            update = K @ innovation
+            landmark.x += update[0]
+            landmark.y += update[1]
+
+            # Update the covariance
+            I = np.eye(2)  # Identity matrix
+            landmark.sigma = (I - K @ J) @ landmark.sigma
+
+            # Update the weight using the measurement likelihood
+            det_S = np.linalg.det(S)
+            if det_S > 0:
+                weight_factor = 1 / np.sqrt(2 * np.pi * det_S)
+                exponent = -0.5 * innovation.T @ np.linalg.inv(S) @ innovation
+                self.weight *= weight_factor * np.exp(exponent)
+        
     
     ##UPDATE##
     def update_particle(self, collected_data):
@@ -105,36 +134,4 @@ class Particle:
     def get_pose(self):
         return (self.pose)
     
-    # def set_pose(self, x, y, theta):
-    #     if x > SCREEN_WIDTH:
-    #         x = SCREEN_WIDTH
-    #     if y > SCREEN_HEIGHT:
-    #         y = SCREEN_HEIGHT
-    #     self.pose = np.array([x, y, theta])
     
-    ##LANDMARKS##
-    
-    def get_landmark(self, landmark_id):
-        return self.landmarks[str(landmark_id)]
-    
-    def create_landmark(self, distance, angle, id ):
-       
-        x = self.pose[0] + distance * math.cos(angle + self.pose[2])
-        y = self.pose[1] + distance * math.sin(angle + self.pose[2])
-        self.landmarks[id] = Landmark(x, y)
-        
-    def update_landmark(self, obs, landmark_idx, ass_obs, ass_jacobian, ass_adjcov):
-        landmark = self.landmarks[landmark_idx]
-        K_matrix = landmark.sig.dot(np.transpose(self.J_matrix)).dot(linalg.inv(ass_adjcov))
-        new_mu = landmark.mu + K_matrix.dot(obs - ass_obs)
-        new_sig = (np.eye(2) - K_matrix.dot(self.J_matrix)).dot(landmark.sigma)
-        landmark.update(new_mu, new_sig)
-    
-    
-    def handle_landmark(self,landmark_dist, landmark_bearing_angle, landmark_id):
-        ###FALTA FAZERRR###
-        if landmark_id not in self.landmarks:
-            self.create_landmark(landmark_dist, landmark_bearing_angle, landmark_id)
-        else:
-            self.update_landmark()
-        
