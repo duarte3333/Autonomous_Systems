@@ -77,7 +77,9 @@ class FastSlam:
             landmark_dist, landmark_bearing_angle, landmark_id = landmark
             for particle in self.particles:
                 particle.handle_landmark(landmark_dist, landmark_bearing_angle, landmark_id)
-        self.particles , self.best_particle_ID = resample(self.particles, self.num_particles, self.resample_method)
+        
+        
+        self.particles , self.best_particle_ID = resample(self.particles, self.num_particles, self.resample_method, self.best_particle_ID)
         #use latest estimation to update_screen
         self.update_screen()
         
@@ -85,12 +87,12 @@ class FastSlam:
 
     def update_screen(self):
         if self.best_particle_ID==-1:
-            x,y,theta= self.width_meters/2,self.height_meters/2,0 
+            x,y,theta= 0,0,0
 
         else:
             x,y,theta= self.particles[self.best_particle_ID].pose
         # Calculate the vertices of the triangle for orientation
-        turtlebot_pos= (int((x) * self.SCREEN_WIDTH/self.width_meters +self.left_coordinate), int((y) *self.SCREEN_HEIGHT/self.height_meters)) #window should display a 5x5 m^2 area
+        turtlebot_pos= (int((x) * self.SCREEN_WIDTH/self.width_meters +self.left_coordinate + self.SCREEN_WIDTH/2), int((y) *self.SCREEN_HEIGHT/self.height_meters + self.SCREEN_HEIGHT/2)) #window should display a 5x5 m^2 area
         triangle_length = 0.8*self.turtlebot_radius_pixel
         triangle_tip_x = turtlebot_pos[0] + triangle_length * math.cos(theta)
         triangle_tip_y = turtlebot_pos[1] - triangle_length * math.sin(theta)
@@ -114,7 +116,16 @@ class FastSlam:
             particle_x , particle_y, _ = particle.pose
             pygame.draw.circle(self.screen, self.RED, (int((particle_x ) * self.SCREEN_WIDTH/self.width_meters + self.left_coordinate + self.SCREEN_WIDTH/2), int((particle_y)* self.SCREEN_HEIGHT/self.height_meters+ self.SCREEN_HEIGHT/2)), 3)
 
-
+        for landmark_id, landmark in self.particles[self.best_particle_ID].landmarks.items():
+            landmark_x , landmark_y = landmark.x, landmark.y
+            print('landmark_id',landmark_id, ' pose: ', landmark_x ,' ,', landmark_y)
+            pygame.draw.circle(self.screen, self.BLACK, (int(landmark_x* self.SCREEN_WIDTH/self.width_meters + self.left_coordinate + self.SCREEN_WIDTH/2), int(landmark_y* self.SCREEN_HEIGHT/self.height_meters+ self.SCREEN_HEIGHT/2)), 5)
+            
+            font = pygame.font.Font(None, 30)  
+            text_surface = font.render("id:"+str(landmark_id), True, self.BLACK)  # Render text surface
+            text_rect = text_surface.get_rect(center=(int(landmark_x * self.SCREEN_WIDTH / self.width_meters + self.left_coordinate + self.SCREEN_WIDTH/2), int(landmark_y * self.SCREEN_HEIGHT / self.height_meters+ self.SCREEN_HEIGHT/2)- 15))  # Position text surface above the circle
+            self.screen.blit(text_surface, text_rect)  # Blit text surface onto the screen
+            
 
 
 

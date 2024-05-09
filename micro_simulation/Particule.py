@@ -40,9 +40,9 @@ class Particle:
         #print('deltas: ',deltaRight,', ',  deltaLeft ) 
       
         deltaD =(deltaRight + deltaLeft)/2
-        delta_theta=(deltaRight - deltaLeft)/self.turtlebot_L
+        delta_theta=-(deltaRight - deltaLeft)/self.turtlebot_L
         delta_x=deltaD*math.cos(theta)
-        delta_y=deltaD*math.sin(theta)
+        delta_y=-deltaD*math.sin(theta)
         noise=np.random.normal(0, self.std_dev_motion, 3)
         new_x = x + delta_x*(1+noise[0])
         new_y = y + delta_y*(1+noise[1])
@@ -98,15 +98,12 @@ class Particle:
             dy = landmark_y - y
             predicted_distance = math.sqrt(dx**2 + dy**2)
             predicted_angle = math.atan2(dy, dx) - theta
-            
+            predicted_angle=predicted_angle[0]# to make it not be an array, but a value
             # Calculate Jacobian matrix H of the measurement function
             q = dx**2 + dy**2
             sqrt_q = math.sqrt(q)
-            J = np.array([
-                [dx / sqrt_q, dy / sqrt_q],
-                [-dy / q, -dx / q]
-            ])
-            
+            J = np.array([[dx / sqrt_q, dy / sqrt_q],[-dy / q, -dx / q]])
+            J = J.reshape(2, 2)
             # Measurement noise covariance matrix (should be tuned)
             Q = np.diag([0.1, 0.1])  # Example values
 

@@ -39,6 +39,7 @@ def run_simulation_main():
         else: #update landmarks with less frequency than the odometry
             my_slam.compute_slam(sim.get_odometry(),sim.get_Landmarks_in_sight(landmarks, "Relative_pose") )
             count=0
+            #print('compute slam, best id:', my_slam.best_particle_ID)
         
         #print('Odometry:', sim.get_odometry() )  THIS IS USED TO GET ODOMETRY
         #print('Landmarks in sight ', sim.get_Landmarks_in_sight(landmarks, "Relative_pose")) #THIS IS USED TO GET LANDMARKS POSITION

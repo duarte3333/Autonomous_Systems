@@ -93,10 +93,17 @@ class Simulation:
         pygame.draw.rect(self.screen, self.BLACK, bar_rect)
         pygame.draw.circle(self.screen, self.GREEN, turtlebot_pos , self.turtlebot_radius_pixel)
         pygame.draw.polygon(self.screen, self.BLUE, triangle_points)
-
+        id=0
         for landmark in landmarks:
             landmark_x , landmark_y = landmark
             pygame.draw.circle(self.screen, self.BLACK, (int(landmark_x* self.SCREEN_WIDTH/self.width_meters), int(landmark_y* self.SCREEN_HEIGHT/self.height_meters)), 5)
+            # Render id text
+            font = pygame.font.Font(None, 30)  # You can change the font and size here
+            text_surface = font.render("id:"+str(id), True, self.BLACK)  # Render text surface
+            text_rect = text_surface.get_rect(center=(int(landmark_x * self.SCREEN_WIDTH / self.width_meters), int(landmark_y * self.SCREEN_HEIGHT / self.height_meters) - 15))  # Position text surface above the circle
+            self.screen.blit(text_surface, text_rect)  # Blit text surface onto the screen
+            
+            id+=1
         for i in self.indices_in_sight:
             landmark_x , landmark_y = landmarks[i]
             pygame.draw.circle(self.screen, self.BLACK, (int(landmark_x* self.SCREEN_WIDTH/self.width_meters), int(landmark_y* self.SCREEN_HEIGHT/self.height_meters)), 10)
@@ -140,6 +147,6 @@ class Simulation:
                 noise_angle =  np.random.normal(0, self.std_dev_landmark, 1)*beta
                 noise_dist= np.random.normal(0, self.std_dev_landmark, 1)*distance_to_landmark
                 Landmarks_in_sight.append((distance_to_landmark+ noise_dist[0] ,beta + noise_angle[0], landmark_ID))
-                print('Landmarks_in_sight', Landmarks_in_sight)
+                #print('Landmarks_in_sight', Landmarks_in_sight)
 
         return np.array(Landmarks_in_sight)
