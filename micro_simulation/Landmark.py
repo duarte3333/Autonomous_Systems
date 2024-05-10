@@ -11,7 +11,7 @@ class Landmark:
         self.mu = np.array([[self.x],[self.y]]) #column vector
         
         #smaller value in the covariance matrix implies higher confidence in the position estimate
-        self.sigma = np.eye(2) * 99 #2x2 covariance matrix associated with the landmark
+        self.sigma = np.eye(2) *0.01 #2x2 covariance matrix associated with the landmark
         
         #The np.eye is used to create an identity matrix
         

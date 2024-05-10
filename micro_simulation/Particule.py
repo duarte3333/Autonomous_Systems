@@ -90,14 +90,14 @@ class Particle:
             x, y, theta = self.pose
             landmark_x = landmark.x
             landmark_y = landmark.y
-            landmark_x = x + distance * math.cos(theta + angle)
-            landmark_y = y + distance * math.sin(theta + angle)
+            #landmark_x = x + distance * math.cos(theta + angle)
+            #landmark_y = y + distance * math.sin(theta + angle)
             
             # Prediction of the measurement
             dx = landmark_x - x
             dy = landmark_y - y
             predicted_distance = math.sqrt(dx**2 + dy**2)
-            predicted_angle = math.atan2(dy, dx) - theta
+            predicted_angle = math.atan2(dy, dx) -theta
             predicted_angle=predicted_angle[0]# to make it not be an array, but a value
             # Calculate Jacobian matrix H of the measurement function
             q = dx**2 + dy**2
