@@ -83,6 +83,28 @@ class Particle:
         landmark_x = x + distance * math.cos(theta + angle)
         landmark_y = y + distance * math.sin(theta + angle)
         self.landmarks[landmark_id] = Landmark(landmark_x, landmark_y)
+        
+        # Prediction of the measurement
+        dx = landmark_x - x
+        dy = landmark_y - y
+        predicted_distance = math.sqrt(dx**2 + dy**2)
+        predicted_angle = math.atan2(dy, dx) -theta
+        predicted_angle=predicted_angle[0]# to make it not be an array, but a value
+        
+        # Calculate Jacobian matrix H of the measurement function
+        q = dx**2 + dy**2
+        sqrt_q = math.sqrt(q)
+        J = np.array([[dx / sqrt_q, dy / sqrt_q],[-dy / q, -dx / q]])
+        J = J.reshape(2, 2)
+        
+        # Measurement noise covariance matrix (should be tuned)
+        Q = np.diag([0.1, 0.1])  # Example values , Q is Q_t in the book
+        
+        self.landmarks[landmark_id].sigma = linalg.inv(J) @ Q @ linalg.inv(J).T
+        
+        #set a default importance weight
+        self.weight = 1.0 #p0 in the book
+        
     
     def update_landmark(self, distance, angle, landmark_id):
             """Updates an existing landmark using the EKF update step."""
@@ -104,12 +126,13 @@ class Particle:
             sqrt_q = math.sqrt(q)
             J = np.array([[dx / sqrt_q, dy / sqrt_q],[-dy / q, -dx / q]])
             J = J.reshape(2, 2)
+            
             # Measurement noise covariance matrix (should be tuned)
-            Q = np.diag([0.1, 0.1])  # Example values
+            Q = np.diag([0.1, 0.1])  # Example values , Q is Q_t in the book
 
             # Calculate the Kalman Gain
             S = J @ landmark.sigma @ J.T + Q  # Measurement prediction covariance
-            K = landmark.sigma @ J.T @ np.linalg.inv(S)
+            K = landmark.sigma @ J.T @ np.linalg.inv(S) #S is Q in the book
 
             # Innovation (measurement residual)
             innovation = np.array([distance - predicted_distance, angle - predicted_angle])
