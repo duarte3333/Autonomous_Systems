@@ -8,7 +8,7 @@ from aux_slam import euclidean_distance
 
 class Simulation:
         
-    def __init__(self, width_meters=5, height_meters=5, size_pixel=800, Odometry_noise=True, sample_rate=60, central_bar_width=10):
+    def __init__(self, width_meters=5, height_meters=5, size_pixel=800, Odometry_noise=True, Landmark_noise=True, sample_rate=60, central_bar_width=10):
         pygame.init()
 
         # Define colors
@@ -38,8 +38,9 @@ class Simulation:
         self.turtlebot = TurtleBot3Waffle(self.time_interval,Odometry_noise,width_meters, height_meters, self.turtlebot_radius )
         self.running=True
         self.clock = pygame.time.Clock()
-
+        self.Landmark_noise=Landmark_noise
         self.std_dev_landmark = 0.05
+
     def loop_iteration(self, landmarks):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -136,7 +137,7 @@ class Simulation:
                 landmark_ID=indice
 
                 angle_to_landmark = -math.atan2(landmark_y - my_y, landmark_x - my_x)
-                beta = my_theta - angle_to_landmark
+                beta = angle_to_landmark - my_theta
 
                 #print(my_theta, " ", angle_to_landmark)
                 distance_to_landmark = euclidean_distance([my_x, my_y],landmarks[indice])
@@ -144,8 +145,13 @@ class Simulation:
 
                 #x_rel = distance_to_landmark * math.cos(angle_difference)
                 #y_rel = distance_to_landmark * math.sin(angle_difference)    
-                noise_angle =  np.random.normal(0, self.std_dev_landmark, 1)*beta
-                noise_dist= np.random.normal(0, self.std_dev_landmark, 1)*distance_to_landmark
+                if  self.Landmark_noise:
+                    noise_angle =  np.random.normal(0, self.std_dev_landmark, 1)*beta
+                    noise_dist= np.random.normal(0, self.std_dev_landmark, 1)*distance_to_landmark
+                else:
+                    noise_angle=[0]
+                    noise_dist=[0]
+                
                 Landmarks_in_sight.append((distance_to_landmark+ noise_dist[0] ,beta + noise_angle[0], landmark_ID))
                 #print('Landmarks_in_sight', Landmarks_in_sight)
 

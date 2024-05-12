@@ -13,11 +13,7 @@ class Landmark:
         #smaller value in the covariance matrix implies higher confidence in the position estimate
         self.sigma = np.eye(2) *0.01 #2x2 covariance matrix associated with the landmark
         
-        #The np.eye is used to create an identity matrix
         
-        #The matrix is multiplied by 99 because in beginning
-        #there is high uncertainty in the position of the landmark
-
     def distance_to(self, x, y):
         return math.sqrt((self.x - x) ** 2 + (self.y - y) ** 2)
 

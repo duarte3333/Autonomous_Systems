@@ -58,6 +58,7 @@ def resample(particles, Num_particles, resample_method,new_highest_weight_index)
         weights.append(particles[i].weight)
     weights = np.array(weights).T
 
+
     highest_weight_index = np.argmax(weights)  # Index of particle with highest weight before equalization
 
 
@@ -66,6 +67,7 @@ def resample(particles, Num_particles, resample_method,new_highest_weight_index)
     Neff_maximum = 1.0 / (equal_weights @ equal_weights.T)
     #print('Neff',Neff,'   ', Neff_maximum)
     if Neff < Neff_maximum/2:  # only resample if Neff is too low - partiles are not represantative os posteriori
+        print('Lets resample')
         if resample_method=="low variance":
             indices = low_variance_resampling(weights, equal_weights, Num_particles)
         elif resample_method=="Stratified":

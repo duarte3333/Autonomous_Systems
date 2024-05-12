@@ -73,12 +73,20 @@ class FastSlam:
         #compute and display FastSlam
         self.update_odometry(odometry)
         # Landmark update
+        weights_here=[]
+        are_there_landmarks=False
         for landmark in landmarks_in_sight:
             landmark_dist, landmark_bearing_angle, landmark_id = landmark
+            x,y,theta= self.particles[0].pose
+            are_there_landmarks=True
+            weights_here=[]
             for particle in self.particles:
                 particle.handle_landmark(landmark_dist, landmark_bearing_angle, landmark_id)
-        
-        
+                weights_here.append(particle.weight)        
+            
+        #if are_there_landmarks:
+            #print('weights_here: ',weights_here)
+
         self.particles , self.best_particle_ID = resample(self.particles, self.num_particles, self.resample_method, self.best_particle_ID)
         #use latest estimation to update_screen
         self.update_screen()
@@ -87,10 +95,10 @@ class FastSlam:
 
     def update_screen(self):
         if self.best_particle_ID==-1:
-            x,y,theta= 0,0,0
+           # x,y,theta= 0,0,0
+           self.best_particle_ID=np.random.randint(len(self.particles))
 
-        else:
-            x,y,theta= self.particles[self.best_particle_ID].pose
+        x,y,theta= self.particles[self.best_particle_ID].pose
         # Calculate the vertices of the triangle for orientation
         turtlebot_pos= (int((x) * self.SCREEN_WIDTH/self.width_meters +self.left_coordinate + self.SCREEN_WIDTH/2), int((y) *self.SCREEN_HEIGHT/self.height_meters + self.SCREEN_HEIGHT/2)) #window should display a 5x5 m^2 area
         triangle_length = 0.8*self.turtlebot_radius_pixel
@@ -118,7 +126,7 @@ class FastSlam:
 
         for landmark_id, landmark in self.particles[self.best_particle_ID].landmarks.items():
             landmark_x , landmark_y = landmark.x, landmark.y
-            print('landmark_id',landmark_id, ' pose: ', landmark_x ,' ,', landmark_y)
+            #print('landmark_id',landmark_id, ' pose: ', landmark_x ,' ,', landmark_y)
             pygame.draw.circle(self.screen, self.BLACK, (int(landmark_x* self.SCREEN_WIDTH/self.width_meters + self.left_coordinate + self.SCREEN_WIDTH/2), int(landmark_y* self.SCREEN_HEIGHT/self.height_meters+ self.SCREEN_HEIGHT/2)), 5)
             
             font = pygame.font.Font(None, 30)  

@@ -40,7 +40,7 @@ class Particle:
         #print('deltas: ',deltaRight,', ',  deltaLeft ) 
       
         deltaD =(deltaRight + deltaLeft)/2
-        delta_theta=-(deltaRight - deltaLeft)/self.turtlebot_L
+        delta_theta=-(deltaRight - deltaLeft)/self.turtlebot_L#aqui tinha um menos
         delta_x=deltaD*math.cos(theta)
         delta_y=-deltaD*math.sin(theta)
         noise=np.random.normal(0, self.std_dev_motion, 3)
@@ -81,7 +81,7 @@ class Particle:
     def create_landmark(self, distance, angle, landmark_id):
         x, y, theta = self.get_pose()
         landmark_x = x + distance * math.cos(theta + angle)
-        landmark_y = y + distance * math.sin(theta + angle)
+        landmark_y = y - distance * math.sin(theta + angle)
         self.landmarks[landmark_id] = Landmark(landmark_x, landmark_y)
     
     def update_landmark(self, distance, angle, landmark_id):
@@ -97,15 +97,15 @@ class Particle:
             dx = landmark_x - x
             dy = landmark_y - y
             predicted_distance = math.sqrt(dx**2 + dy**2)
-            predicted_angle = math.atan2(dy, dx) -theta
-            predicted_angle=predicted_angle[0]# to make it not be an array, but a value
+            predicted_angle = -math.atan2(dy, dx) -theta
+            #predicted_angle=predicted_angle[0]# to make it not be an array, but a value
             # Calculate Jacobian matrix H of the measurement function
             q = dx**2 + dy**2
             sqrt_q = math.sqrt(q)
             J = np.array([[dx / sqrt_q, dy / sqrt_q],[-dy / q, -dx / q]])
             J = J.reshape(2, 2)
             # Measurement noise covariance matrix (should be tuned)
-            Q = np.diag([0.1, 0.1])  # Example values
+            Q = np.diag([0.01, 0.01])  # Example values
 
             # Calculate the Kalman Gain
             S = J @ landmark.sigma @ J.T + Q  # Measurement prediction covariance
@@ -113,7 +113,7 @@ class Particle:
 
             # Innovation (measurement residual)
             innovation = np.array([distance - predicted_distance, angle - predicted_angle])
-
+    
             # Update landmark state
             update = K @ innovation
             landmark.x += update[0]
