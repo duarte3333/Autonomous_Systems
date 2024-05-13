@@ -11,7 +11,7 @@ class Particle:
         landmarks: list of landmarks in the map
         weight: weight of the particle"""
         
-    def __init__(self, pose,turtlebot_L,std_dev_motion=0.2 ,is_turtlebot=False):
+    def __init__(self, pose,nr_particles,turtlebot_L,std_dev_motion=0.2 ,is_turtlebot=False):
         self.pose = pose
         self.is_turtlebot = is_turtlebot
         self.landmarks = {}
@@ -19,7 +19,7 @@ class Particle:
         self.std_dev_motion = std_dev_motion
         self.turtlebot_L=turtlebot_L
         self.observation_vector = np.zeros((2,1))
-        
+        self.default_weight=1/nr_particles
         self.J_matrix = np.zeros((2,2))
         self.adjusted_covariance = np.zeros((2,2))
         
@@ -89,12 +89,18 @@ class Particle:
         dy = landmark_y - y
         predicted_distance = math.sqrt(dx**2 + dy**2)
         predicted_angle = math.atan2(dy, dx) -theta
-        predicted_angle=predicted_angle[0]# to make it not be an array, but a value
-        
+        """  try:
+            predicted_angle=predicted_angle[0]# to make it not be an array, but a value
+        except:
+            predicted_angle=predicted_angle """
         # Calculate Jacobian matrix H of the measurement function
         q = dx**2 + dy**2
         sqrt_q = math.sqrt(q)
-        J = np.array([[dx / sqrt_q, dy / sqrt_q],[-dy / q, -dx / q]])
+        # dx=dx[0]
+        # dy=dy[0]
+        # q=q[0]
+
+        J = np.array([[dx / sqrt_q, dy / sqrt_q],[-dy / q, dx / q]])
         J = J.reshape(2, 2)
         
         # Measurement noise covariance matrix (should be tuned)
@@ -103,7 +109,7 @@ class Particle:
         self.landmarks[landmark_id].sigma = linalg.inv(J) @ Q @ linalg.inv(J).T
         
         #set a default importance weight
-        self.weight = 1.0 #p0 in the book
+        self.weight = self.default_weight#p0 in the book
         
     
     def update_landmark(self, distance, angle, landmark_id):
@@ -120,15 +126,15 @@ class Particle:
             dy = landmark_y - y
             predicted_distance = math.sqrt(dx**2 + dy**2)
             predicted_angle = -math.atan2(dy, dx) -theta
-            predicted_angle=predicted_angle[0]# to make it not be an array, but a value
             # Calculate Jacobian matrix H of the measurement function
             q = dx**2 + dy**2
             sqrt_q = math.sqrt(q)
-            J = np.array([[dx / sqrt_q, dy / sqrt_q],[-dy / q, -dx / q]])
+            
+            J = np.array([[dx / sqrt_q, dy / sqrt_q],[dy / q, -dx / q]])
             J = J.reshape(2, 2)
             
             # Measurement noise covariance matrix (should be tuned)
-            Q = np.diag([0.01, 0.01])  # Example values
+            Q = np.diag([0.1, 0.1])  # Example values
 
             # Calculate the Kalman Gain
             S = J @ landmark.sigma @ J.T + Q  # Measurement prediction covariance

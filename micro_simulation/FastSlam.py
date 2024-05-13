@@ -53,7 +53,7 @@ class FastSlam:
             y = 0#np.random.uniform(0, self.height_meters)
             theta = 0#np.random.uniform(0, 2 * np.pi)
             pose = np.array([x, y, theta])
-            particles.append(Particle(pose, self.turtlebot_L,self.std_dev_motion ))
+            particles.append(Particle(pose,self.num_particles, self.turtlebot_L,self.std_dev_motion ))
         return particles
     
 
@@ -74,19 +74,15 @@ class FastSlam:
         self.update_odometry(odometry)
         # Landmark update
         weights_here=[]
-        are_there_landmarks=False
         for landmark in landmarks_in_sight:
             landmark_dist, landmark_bearing_angle, landmark_id = landmark
             x,y,theta= self.particles[0].pose
-            are_there_landmarks=True
             weights_here=[]
             for particle in self.particles:
                 particle.handle_landmark(landmark_dist, landmark_bearing_angle, landmark_id)
                 weights_here.append(particle.weight)        
             
-        #if are_there_landmarks:
-            #print('weights_here: ',weights_here)
-
+       
         self.particles , self.best_particle_ID = resample(self.particles, self.num_particles, self.resample_method, self.best_particle_ID)
         #use latest estimation to update_screen
         self.update_screen()

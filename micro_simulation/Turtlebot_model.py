@@ -66,7 +66,9 @@ class TurtleBot3Waffle:
         odometry_left = Translation - Rotation*self.wheel_base/2 #this is given in meters
         odometry_right = Translation + Rotation*self.wheel_base/2 #this is given in meters
         gaussian_noise_left = np.random.normal(0, self.std_dev, 1)*odometry_left
+        gaussian_noise_left=gaussian_noise_left[0]
         gaussian_noise_right = np.random.normal(0, self.std_dev, 1)*odometry_right
+        gaussian_noise_right=gaussian_noise_right[0]
 
         if self.Odometry_noise==False:
             gaussian_noise_left=0

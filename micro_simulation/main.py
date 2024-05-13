@@ -27,7 +27,7 @@ def run_simulation_main():
     size_m = 3#float(input('What should be the size of the map? n x n (in meters). n is: '))
     nr_landmarks =5# int(input('How many random arucu landmarks do you want in your map?'))
     central_bar_width=10
-    number_particles=50
+    number_particles=30
 
     landmarks = create_landmarks(nr_landmarks,size_m,size_m)
     sim=Simulation(size_m, size_m,window_size_pixel, Odometry_noise,landmark_noise, sample_rate, central_bar_width)

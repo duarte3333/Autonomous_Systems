@@ -148,11 +148,13 @@ class Simulation:
                 if  self.Landmark_noise:
                     noise_angle =  np.random.normal(0, self.std_dev_landmark, 1)*beta
                     noise_dist= np.random.normal(0, self.std_dev_landmark, 1)*distance_to_landmark
+                    noise_angle=noise_angle[0]
+                    noise_dist=noise_dist[0]
                 else:
-                    noise_angle=[0]
-                    noise_dist=[0]
+                    noise_angle=0
+                    noise_dist=0
                 
-                Landmarks_in_sight.append((distance_to_landmark+ noise_dist[0] ,beta + noise_angle[0], landmark_ID))
+                Landmarks_in_sight.append((distance_to_landmark+ noise_dist ,beta + noise_angle, landmark_ID))
                 #print('Landmarks_in_sight', Landmarks_in_sight)
 
         return np.array(Landmarks_in_sight)
