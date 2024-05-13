@@ -20,17 +20,18 @@ A opção "Relative_pose" é a que se aproxima melhor da situação do turtlebot
 
 def run_simulation_main():
     #Main parameters:
-    Odometry_noise= False  #Gausian noise na odometria
-    landmark_noise=False
+    Odometry_noise= True  #Gausian noise na odometria
+    landmark_noise=True
     window_size_pixel=1000    #tamanho da janela
-    sample_rate=5  #sample rate (Hz)
+    sample_rate=100  #sample rate (Hz)
     size_m = 3#float(input('What should be the size of the map? n x n (in meters). n is: '))
     nr_landmarks =5# int(input('How many random arucu landmarks do you want in your map?'))
     central_bar_width=10
+    number_particles=50
 
     landmarks = create_landmarks(nr_landmarks,size_m,size_m)
     sim=Simulation(size_m, size_m,window_size_pixel, Odometry_noise,landmark_noise, sample_rate, central_bar_width)
-    my_slam = FastSlam(window_size_pixel, sample_rate, size_m, central_bar_width,sim.turtlebot.wheel_base ,sim.get_screen())
+    my_slam = FastSlam(window_size_pixel, sample_rate, size_m, central_bar_width,sim.turtlebot.wheel_base ,sim.get_screen(), number_particles)
     count=0
     while sim.get_running():
         sim.loop_iteration(landmarks)

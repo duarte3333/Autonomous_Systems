@@ -6,7 +6,7 @@ from aux_slam import resample
 from Particule import Particle
 
 class FastSlam:
-    def __init__(self, window_size_pixel, sample_rate, size_m,central_bar_width, turtlebot_L,screen, resample_method="low variance",std_dev_motion = 0.2, num_particles=50 ):
+    def __init__(self, window_size_pixel, sample_rate, size_m,central_bar_width, turtlebot_L,screen,num_particles=50 , resample_method="low variance",std_dev_motion = 0.5):
         
         self.std_dev_motion = std_dev_motion
         self.resample_method=resample_method

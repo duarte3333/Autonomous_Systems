@@ -120,7 +120,7 @@ class Particle:
             dy = landmark_y - y
             predicted_distance = math.sqrt(dx**2 + dy**2)
             predicted_angle = -math.atan2(dy, dx) -theta
-            #predicted_angle=predicted_angle[0]# to make it not be an array, but a value
+            predicted_angle=predicted_angle[0]# to make it not be an array, but a value
             # Calculate Jacobian matrix H of the measurement function
             q = dx**2 + dy**2
             sqrt_q = math.sqrt(q)
@@ -133,7 +133,6 @@ class Particle:
             # Calculate the Kalman Gain
             S = J @ landmark.sigma @ J.T + Q  # Measurement prediction covariance
             K = landmark.sigma @ J.T @ np.linalg.inv(S) #S is Q in the book
-
             # Innovation (measurement residual)
             innovation = np.array([distance - predicted_distance, angle - predicted_angle])
     
