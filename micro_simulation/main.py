@@ -21,7 +21,7 @@ A opção "Relative_pose" é a que se aproxima melhor da situação do turtlebot
 def run_simulation_main():
     #Main parameters:
     Odometry_noise= True  #Gausian noise na odometria
-    landmark_noise=True
+    landmark_noise=False
     window_size_pixel=1000    #tamanho da janela
     sample_rate=100  #sample rate (Hz)
     size_m = 3#float(input('What should be the size of the map? n x n (in meters). n is: '))

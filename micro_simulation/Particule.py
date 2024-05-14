@@ -15,7 +15,7 @@ class Particle:
         self.pose = pose
         self.is_turtlebot = is_turtlebot
         self.landmarks = {}
-        self.weight = 1.0
+        self.weight = 1.0 / 50
         self.std_dev_motion = std_dev_motion
         self.turtlebot_L=turtlebot_L
         self.observation_vector = np.zeros((2,1))
@@ -84,9 +84,16 @@ class Particle:
         landmark_y = y - distance * math.sin(theta + angle)
         self.landmarks[landmark_id] = Landmark(landmark_x, landmark_y)
         
-        # Prediction of the measurement
+        
+        # Calculate the differences in x and y coordinates
         dx = landmark_x - x
         dy = landmark_y - y
+        
+        # Extract the scalar values if dx and dy are numpy arrays
+        dx = dx.item() if isinstance(dx, np.ndarray) and dx.size == 1 else dx
+        dy = dy.item() if isinstance(dy, np.ndarray) and dy.size == 1 else dy
+        
+        # Prediction of the measurement
         predicted_distance = math.sqrt(dx**2 + dy**2)
         predicted_angle = math.atan2(dy, dx) -theta
         predicted_angle=predicted_angle[0]# to make it not be an array, but a value
@@ -94,16 +101,22 @@ class Particle:
         # Calculate Jacobian matrix H of the measurement function
         q = dx**2 + dy**2
         sqrt_q = math.sqrt(q)
-        J = np.array([[dx / sqrt_q, dy / sqrt_q],[-dy / q, -dx / q]])
-        J = J.reshape(2, 2)
+        #print("dx:", dx, "dy:", dy, "sqrt_q:", sqrt_q)
+        J = np.array([[dx / sqrt_q, dy / sqrt_q, 0],
+                      [-dy / q, -dx / q, -1]])
+        #J = J.reshape(2, 2)
         
         # Measurement noise covariance matrix (should be tuned)
-        Q = np.diag([0.1, 0.1])  # Example values , Q is Q_t in the book
+        Q = np.diag([0.0001, 0.0001])  # Example values , Q is Q_t in the book
+        # Assuming landmark.sigma is a 3x3 covariance matrix
         
-        self.landmarks[landmark_id].sigma = linalg.inv(J) @ Q @ linalg.inv(J).T
-        
+        # Compute the Kalman gain and update covariance as per EKF
+        S = J @ self.landmarks[landmark_id].sigma @ J.T + Q
+        K = self.landmarks[landmark_id].sigma @ J.T @ np.linalg.inv(S)
+        self.landmarks[landmark_id].sigma = (np.eye(3) - K @ J) @ self.landmarks[landmark_id].sigma
+
         #set a default importance weight
-        self.weight = 1.0 #p0 in the book
+        self.weight = 1.0 / 50 #p0 in the book
         
     
     def update_landmark(self, distance, angle, landmark_id):
@@ -118,17 +131,23 @@ class Particle:
             # Prediction of the measurement
             dx = landmark_x - x
             dy = landmark_y - y
+            
+            # Ensure dx and dy are scalar values if they are returned as numpy arrays
+            dx = dx.item() if isinstance(dx, np.ndarray) and dx.size == 1 else dx
+            dy = dy.item() if isinstance(dy, np.ndarray) and dy.size == 1 else dy 
+            
             predicted_distance = math.sqrt(dx**2 + dy**2)
-            predicted_angle = -math.atan2(dy, dx) -theta
+            predicted_angle = -math.atan2(dy, dx) - theta
             predicted_angle=predicted_angle[0]# to make it not be an array, but a value
             # Calculate Jacobian matrix H of the measurement function
             q = dx**2 + dy**2
             sqrt_q = math.sqrt(q)
-            J = np.array([[dx / sqrt_q, dy / sqrt_q],[-dy / q, -dx / q]])
-            J = J.reshape(2, 2)
+            J = np.array([[dx / sqrt_q, dy / sqrt_q, 0],
+                          [dy / q, -dx / q, -1]])
+            #J = J.reshape(2, 3)
             
             # Measurement noise covariance matrix (should be tuned)
-            Q = np.diag([0.01, 0.01])  # Example values
+            Q = np.diag([0.0001, 0.0001])  # Example values
 
             # Calculate the Kalman Gain
             S = J @ landmark.sigma @ J.T + Q  # Measurement prediction covariance
@@ -142,7 +161,7 @@ class Particle:
             landmark.y += update[1]
 
             # Update the covariance
-            I = np.eye(2)  # Identity matrix
+            I = np.eye(3)  # Identity matrix
             landmark.sigma = (I - K @ J) @ landmark.sigma
 
             # Update the weight using the measurement likelihood
