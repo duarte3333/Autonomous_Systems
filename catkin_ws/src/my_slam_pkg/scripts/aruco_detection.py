@@ -14,7 +14,7 @@ class ArucoSLAM:
         self.calibrate_camera()
         rospy.loginfo('ArucoSLAM Node Started')
         rospy.init_node('aruco_slam') # Initialize the ROS node
-        
+       
         #subscribe node
         self.image_sub = rospy.Subscriber("/raspicam_node/image/compressed", CompressedImage, self.image_callback)
         # Calibrate the cameraiber("/camera/image_raw", Image, self.image_callback)
@@ -30,7 +30,7 @@ class ArucoSLAM:
         #self.parameters =  cv2.aruco.DetectorParameters()
         self.parameters = aruco.DetectorParameters_create()
         #self.detector = cv2.aruco.ArucoDetector(self.aruco_dict, self.parameters)
-        
+        self.dict = {15: [], 53: [], 60: [], 77: [], 100: []}
         self.map = {} 
     
     def calibrate_camera(self):
@@ -44,6 +44,7 @@ class ArucoSLAM:
         self.dist_coeffs = dist.astype(float)
         
     def image_callback(self, data):
+        
         marker_length = 0.1  #length of the marker in meters, change this if we use another marker 
         world_coords = np.array([[0, 0, 0],
                              [marker_length, 0, 0],
@@ -68,12 +69,8 @@ class ArucoSLAM:
                 marker_corners = corners[i][0]
                 cv2.polylines(cv_image, [np.int32(marker_corners)], True, (0, 255, 0), 2)  # Bounding Box
                 _, tvec, _ = cv2.aruco.estimatePoseSingleMarkers(corners[i], 0.1, self.camera_matrix, self.dist_coeffs)
-                #markPos = tvec.reshape((1,3))
-                #_,phi = cart2pol(tvec[0][0][2],tvec[0][0][0]-0.1)
-                #phi = phi *180 /np.pi            
-
             
-                homography, _ = cv2.findHomography(world_coords, marker_corners, cv2.RANSAC)
+                homography, _ = cv2.findHomography(world_coords, marker_corners, cv2.RANSAC,7)
                 essential_matrix = np.dot(np.dot(np.linalg.inv(self.camera_matrix), homography),self.camera_matrix)
                 u, _, _ = np.linalg.svd(essential_matrix)
 
@@ -82,13 +79,16 @@ class ArucoSLAM:
                 _,phi = cart2pol(translation_vector[2],translation_vector[0])
                 phi = phi *180 /np.pi
 
+                self.dict[ids[i][0]].append(phi)
 
                 # ID of the marker
                 #cv2.putText(cv_image, str(ids[i][0]), (int(marker_corners[0][0] - 10), int(marker_corners[0][1]) - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3)
-                cv2.putText(cv_image, str(round(tvec[0][0][2], 3)), (int(marker_corners[2][0] - 80), int(marker_corners[2][1]) + 45), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
-                cv2.putText(cv_image,  'ang='+str(round(phi,3)), (int(marker_corners[1][0]-70),int(marker_corners[1][1])-10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255 ), 3)
-   
-   
+                #cv2.putText(cv_image, str(round(tvec[0][0][2], 3)), (int(marker_corners[2][0] - 80), int(marker_corners[2][1]) + 45), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
+
+                if len(self.dict[ids[i][0]]) >= 5:                
+                    phi5 =  np.median(self.dict[ids[i][0]][-6:-1])
+                    self.dict[ids[i][0]].pop(0)
+                    cv2.putText(cv_image,  'ang='+str(round(phi5,3)), (int(marker_corners[1][0]-70),int(marker_corners[1][1])-10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255 ), 3)
    
             rospy.loginfo("IDs detected: %s", ids)  # Correct logging of detected IDs
         cv2.imshow('Aruco Detection', cv_image)
