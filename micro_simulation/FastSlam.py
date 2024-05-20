@@ -10,14 +10,18 @@ class FastSlam:
         
         self.SCREEN_WIDTH = window_size_pixel
         self.SCREEN_HEIGHT = window_size_pixel
+        self.only_slam_window=only_slam_window
+        self.central_bar_width=central_bar_width
+
         if screen==None:
             pygame.init()
             pygame.display.init()
             screen = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
             pygame.display.set_caption("TurtleBot3 Slam predictions")
-        self.only_slam_window=only_slam_window
-        self.central_bar_width=central_bar_width
-        if only_slam_window:
+            self.left_coordinate = 0
+            self.right_coordinate=self.SCREEN_WIDTH
+            
+        elif only_slam_window:
             self.left_coordinate = 0
             self.right_coordinate=self.SCREEN_WIDTH
         else:

@@ -32,7 +32,7 @@ def init_variables():
 
     landmarks = create_landmarks(nr_landmarks,size_m,size_m)
     sim=Simulation(only_slam_window,size_m, size_m,window_size_pixel, Odometry_noise,landmark_noise, sample_rate, central_bar_width)
-    my_slam = FastSlam(only_slam_window,window_size_pixel, sample_rate, size_m, central_bar_width,sim.turtlebot.wheel_base , number_particles, sim.get_screen())
+    my_slam = FastSlam(only_slam_window,window_size_pixel, sample_rate, size_m, central_bar_width,sim.turtlebot.wheel_base , number_particles)#, sim.get_screen())
     return landmarks,sim, my_slam
 
 def run_simulation_main():
