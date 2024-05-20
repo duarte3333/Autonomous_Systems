@@ -8,8 +8,8 @@ from aux_slam import euclidean_distance
 
 class Simulation:
         
-    def __init__(self, width_meters=5, height_meters=5, size_pixel=800, Odometry_noise=True, Landmark_noise=True, sample_rate=60, central_bar_width=10):
-        pygame.init()
+    def __init__(self,only_slam_window, width_meters=5, height_meters=5, size_pixel=800, Odometry_noise=True, Landmark_noise=True, sample_rate=60, central_bar_width=10):
+        
 
         # Define colors
         self.BLACK = (0, 0, 0)
@@ -24,11 +24,17 @@ class Simulation:
         self.height_meters=height_meters
         self.turtlebot_radius=0.105 
         self.turtlebot_radius_pixel =self.turtlebot_radius * self.SCREEN_WIDTH/width_meters #from turtlebot website
+        self.only_slam_window=only_slam_window
 
-        pygame.display.init()
+        #pygame.display.init()
         self.central_bar_width=central_bar_width
-        self.screen = pygame.display.set_mode((self.SCREEN_WIDTH*2 + self.central_bar_width, self.SCREEN_HEIGHT))
-        pygame.display.set_caption("TurtleBot3 Micro-Simulation and Slam predictions")
+        if only_slam_window:
+            self.screen = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
+            pygame.display.set_caption("TurtleBot3 Slam predictions")
+
+        else:
+            self.screen = pygame.display.set_mode((self.SCREEN_WIDTH*2 + self.central_bar_width, self.SCREEN_HEIGHT))
+            pygame.display.set_caption("TurtleBot3 Micro-Simulation and Slam predictions") 
         self.indices_in_sight=[]
 
         self.linear_velocity = 0
@@ -37,7 +43,6 @@ class Simulation:
         self.time_interval = 1.0 / sample_rate  # sample rate in Hz
         self.turtlebot = TurtleBot3Waffle(self.time_interval,Odometry_noise,width_meters, height_meters, self.turtlebot_radius )
         self.running=True
-        self.clock = pygame.time.Clock()
         self.Landmark_noise=Landmark_noise
         self.std_dev_landmark = 0.05
 
@@ -64,7 +69,8 @@ class Simulation:
         self.turtlebot.move(self.linear_velocity,self.angular_velocity, False)
         self.indices_in_sight = self.turtlebot.check_landmarks(landmarks)
         #print(self.indices_in_sight)
-        self.update_screen(landmarks)
+        if not self.only_slam_window:
+            self.update_screen(landmarks)
 
 
     def update_screen(self, landmarks):
@@ -111,7 +117,6 @@ class Simulation:
         
 
         pygame.display.flip()        # Update the display
-        self.clock.tick(1/self.time_interval)
 
     def get_running(self):
         return self.running

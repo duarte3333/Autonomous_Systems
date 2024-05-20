@@ -6,7 +6,23 @@ from aux_slam import resample
 from Particule import Particle
 
 class FastSlam:
-    def __init__(self, window_size_pixel, sample_rate, size_m,central_bar_width, turtlebot_L,screen,num_particles=50 , resample_method="low variance",std_dev_motion = 0.5):
+    def __init__(self,only_slam_window, window_size_pixel, sample_rate, size_m,central_bar_width, turtlebot_L,num_particles=50 , screen=None, resample_method="low variance",std_dev_motion = 0.5):
+        
+        self.SCREEN_WIDTH = window_size_pixel
+        self.SCREEN_HEIGHT = window_size_pixel
+        if screen==None:
+            pygame.init()
+            pygame.display.init()
+            screen = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
+            pygame.display.set_caption("TurtleBot3 Slam predictions")
+        self.only_slam_window=only_slam_window
+        self.central_bar_width=central_bar_width
+        if only_slam_window:
+            self.left_coordinate = 0
+            self.right_coordinate=self.SCREEN_WIDTH
+        else:
+            self.left_coordinate = central_bar_width + self.SCREEN_WIDTH
+            self.right_coordinate=self.SCREEN_WIDTH+self.left_coordinate+self.central_bar_width
         
         self.std_dev_motion = std_dev_motion
         self.resample_method=resample_method
@@ -18,12 +34,7 @@ class FastSlam:
         self.RED=(170,0,0)
 
         # Set up the screen
-        self.screen = screen
-        self.central_bar_width=central_bar_width
-        self.SCREEN_WIDTH = window_size_pixel
-        self.SCREEN_HEIGHT = window_size_pixel
-        self.left_coordinate = central_bar_width + self.SCREEN_WIDTH
-        self.right_coordinate=self.SCREEN_WIDTH+self.left_coordinate+self.central_bar_width
+        self.screen = screen      
         self.width_meters=size_m 
         self.height_meters=size_m
         self.turtlebot_radius=0.105
@@ -32,7 +43,6 @@ class FastSlam:
         self.turtlebot_radius_pixel =self.turtlebot_radius * self.SCREEN_WIDTH/self.width_meters #from turtlebot website
 
         self.old_odometry = [0,0]
-
         self.num_particles = num_particles
         self.particles = self.initialize_particles()
         self.best_particle_ID=-1
@@ -115,7 +125,6 @@ class FastSlam:
 
         pygame.draw.circle(self.screen, self.GREEN, turtlebot_pos , self.turtlebot_radius_pixel)
         pygame.draw.polygon(self.screen, self.BLUE, triangle_points)
-        #pygame.display.flip()
 
         #draw current particles
         for particle in self.particles:
@@ -131,7 +140,10 @@ class FastSlam:
             text_surface = font.render("id:"+str(landmark_id), True, self.BLACK)  # Render text surface
             text_rect = text_surface.get_rect(center=(int(landmark_x * self.SCREEN_WIDTH / self.width_meters + self.left_coordinate + self.SCREEN_WIDTH/2), int(landmark_y * self.SCREEN_HEIGHT / self.height_meters+ self.SCREEN_HEIGHT/2)- 15))  # Position text surface above the circle
             self.screen.blit(text_surface, text_rect)  # Blit text surface onto the screen
-            
+        
+        if self.only_slam_window:
+            pygame.display.flip()
+
 
 
 

@@ -17,11 +17,12 @@ sim.get_Landmarks_in_sight(landmarks, "Relative_pose") serve para obter um numpy
 A opção "Relative_pose" é a que se aproxima melhor da situação do turtlebot real, já que este diz apenas onde está a landmark em relação a si proprio.
 
  """
-
-def run_simulation_main():
+def init_variables():
+    
     #Main parameters:
     Odometry_noise= True  #Gausian noise na odometria
     landmark_noise=True
+    only_slam_window=True
     window_size_pixel=1000    #tamanho da janela
     sample_rate=100  #sample rate (Hz)
     size_m = 3#float(input('What should be the size of the map? n x n (in meters). n is: '))
@@ -30,8 +31,14 @@ def run_simulation_main():
     number_particles=30
 
     landmarks = create_landmarks(nr_landmarks,size_m,size_m)
-    sim=Simulation(size_m, size_m,window_size_pixel, Odometry_noise,landmark_noise, sample_rate, central_bar_width)
-    my_slam = FastSlam(window_size_pixel, sample_rate, size_m, central_bar_width,sim.turtlebot.wheel_base ,sim.get_screen(), number_particles)
+    sim=Simulation(only_slam_window,size_m, size_m,window_size_pixel, Odometry_noise,landmark_noise, sample_rate, central_bar_width)
+    my_slam = FastSlam(only_slam_window,window_size_pixel, sample_rate, size_m, central_bar_width,sim.turtlebot.wheel_base , number_particles, sim.get_screen())
+    return landmarks,sim, my_slam
+
+def run_simulation_main():
+    pygame.init()
+    clock = pygame.time.Clock()
+    landmarks,sim, my_slam=init_variables()
     count=0
     while sim.get_running():
         sim.loop_iteration(landmarks)
@@ -41,11 +48,8 @@ def run_simulation_main():
         else: #update landmarks with less frequency than the odometry
             my_slam.compute_slam(sim.get_odometry(),sim.get_Landmarks_in_sight(landmarks, "Relative_pose") )
             count=0
-            #print('compute slam, best id:', my_slam.best_particle_ID)
-        
-        #print('Odometry:', sim.get_odometry() )  THIS IS USED TO GET ODOMETRY
-        #print('Landmarks in sight ', sim.get_Landmarks_in_sight(landmarks, "Relative_pose")) #THIS IS USED TO GET LANDMARKS POSITION
-    
+        clock.tick(1/sim.time_interval)
+
     pygame.display.quit()
     pygame.quit()
     
