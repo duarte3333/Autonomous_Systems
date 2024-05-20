@@ -2,6 +2,7 @@ import numpy as np
 import math
 import random
 from scipy import linalg
+import copy
 from Particule import Particle
 
 def normalize_weights(particles, num_particles):
@@ -52,28 +53,26 @@ def resample(particles, Num_particles, resample_method,new_highest_weight_index)
     #for p in particles:
      #   p.weight=np.random.normal(0.5,0.5,1)
     particles = normalize_weights(particles, Num_particles)
-    weights = []
-    
-    for i in range(Num_particles):
-        weights.append(particles[i].weight)
-    weights = np.array(weights).T
-
-
+    weights = np.array([particle.weight for particle in particles])
     highest_weight_index = np.argmax(weights)  # Index of particle with highest weight before equalization
 
 
-    Neff = 1.0 / (weights @ weights.T)  # Effective particle number
-    equal_weights=np.array(weights*0 + 1/Num_particles)
-    Neff_maximum = 1.0 / (equal_weights @ equal_weights.T)
+    # Neff = 1.0 / (weights @ weights.T)  # Effective particle number
+    # equal_weights=np.array(weights*0 + 1/Num_particles)
+    # Neff_maximum = 1.0 / (equal_weights @ equal_weights.T)
+    Neff = 1.0 / np.sum(np.square(weights))  # Effective particle number
+    equal_weights = np.full_like(weights, 1 / Num_particles)
+    Neff_maximum = 1.0 / np.sum(np.square(equal_weights))
+
     #print('Neff',Neff,'   ', Neff_maximum)
     if Neff < Neff_maximum/2:  # only resample if Neff is too low - partiles are not represantative os posteriori
-        print('Lets resample')
+        #print('Lets resample')
         if resample_method=="low variance":
             indices = low_variance_resampling(weights, equal_weights, Num_particles)
         elif resample_method=="Stratified":
             indices=stratified_resampling(weights, Num_particles)
         
-        particles_copy = particles[:]
+        particles_copy = copy.deepcopy(particles)
         for i in range(len(indices)):
             particles[i].pose = particles_copy[indices[i]].pose
             particles[i].landmarks = particles_copy[indices[i]].landmarks

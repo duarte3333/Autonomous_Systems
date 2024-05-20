@@ -80,7 +80,9 @@ class FastSlam:
             weights_here=[]
             for particle in self.particles:
                 particle.handle_landmark(landmark_dist, landmark_bearing_angle, landmark_id)
-                weights_here.append(particle.weight)        
+                weights_here.append(particle.weight)    
+                #print particle with more weight 
+                #print('max weight', max(weights_here))  
             
        
         self.particles , self.best_particle_ID = resample(self.particles, self.num_particles, self.resample_method, self.best_particle_ID)

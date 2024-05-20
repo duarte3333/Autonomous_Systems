@@ -53,22 +53,7 @@ class Particle:
 
         #self.old_odometry=odometry.copy()
 
-    # ##WEIGHT##
-    # #[(distancia1, angle1, id), ... , (distanciaN, angleN, idN)]
-    # def compute_weight(self, collected_data):
-    #     """ collected_data: list of tuples (distance, angle, id)"""
-    #     self.weight = 1.0 #reset weight 
-    #     for distance, angle_diff, landmark_id in collected_data:
-    #         landmark_id = str(landmark_id)
-    #         if landmark_id not in self.landmarks:
-    #             self.create_landmark(distance, angle_diff, landmark_id)
-    #         else:
-    #             #update Extended Kalman Filter
-    #             self.update_landmark(distance, angle_diff, landmark_id)
-
-
-
- ##WEIGHT##
+    ##WEIGHT##
     def handle_landmark(self, landmark_dist, landmark_bearing_angle, landmark_id):
         landmark_id = str(landmark_id)
         if landmark_id not in self.landmarks:
@@ -88,50 +73,51 @@ class Particle:
         dx = landmark_x - x
         dy = landmark_y - y
         predicted_distance = math.sqrt(dx**2 + dy**2)
-        predicted_angle = math.atan2(dy, dx) -theta
-        """  try:
-            predicted_angle=predicted_angle[0]# to make it not be an array, but a value
-        except:
-            predicted_angle=predicted_angle """
+        predicted_angle = math.atan2(dy, dx) - theta
+        
+        # Normalize the angle between -pi and pi
+        predicted_angle = (predicted_angle + np.pi) % (2 * np.pi) - np.pi
+        
         # Calculate Jacobian matrix H of the measurement function
         q = dx**2 + dy**2
         sqrt_q = math.sqrt(q)
-        # dx=dx[0]
-        # dy=dy[0]
-        # q=q[0]
 
-        J = np.array([[dx / sqrt_q, dy / sqrt_q],[-dy / q, dx / q]])
-        J = J.reshape(2, 2)
+        J = np.array([[dx / sqrt_q, dy / sqrt_q, 0],
+                      [-dy / q, dx / q, -1]])
+        #J = J.reshape(3, 3)
         
         # Measurement noise covariance matrix (should be tuned)
         Q = np.diag([0.1, 0.1])  # Example values , Q is Q_t in the book
-        
-        self.landmarks[landmark_id].sigma = linalg.inv(J) @ Q @ linalg.inv(J).T
-        
+        S = J @ self.landmarks[landmark_id].sigma @ J.T + Q
+        K = self.landmarks[landmark_id].sigma @ J.T @ np.linalg.inv(S)
+        self.landmarks[landmark_id].sigma = (np.eye(3) - K @ J) @ self.landmarks[landmark_id].sigma
+                
         #set a default importance weight
-        self.weight = self.default_weight#p0 in the book
+        self.weight = self.default_weight #p0 in the book
         
     
     def update_landmark(self, distance, angle, landmark_id):
             """Updates an existing landmark using the EKF update step."""
             landmark = self.landmarks[str(landmark_id)]
             x, y, theta = self.pose
-            landmark_x = landmark.x
-            landmark_y = landmark.y
-            #landmark_x = x + distance * math.cos(theta + angle)
-            #landmark_y = y + distance * math.sin(theta + angle)
-            
+ 
             # Prediction of the measurement
-            dx = landmark_x - x
-            dy = landmark_y - y
+            dx = landmark.x - x
+            dy = landmark.y - y
+            #dx = dx.item() if isinstance(dx, np.ndarray) and dx.size == 1 else dx
+            #dy = dy.item() if isinstance(dy, np.ndarray) and dy.size == 1 else dy
             predicted_distance = math.sqrt(dx**2 + dy**2)
             predicted_angle = -math.atan2(dy, dx) -theta
+            
+             # Normalize the angle between -pi and pi
+            predicted_angle = (predicted_angle + np.pi) % (2 * np.pi) - np.pi
+            
             # Calculate Jacobian matrix H of the measurement function
             q = dx**2 + dy**2
             sqrt_q = math.sqrt(q)
             
-            J = np.array([[dx / sqrt_q, dy / sqrt_q],[dy / q, -dx / q]])
-            J = J.reshape(2, 2)
+            J = np.array([[dx / sqrt_q, dy / sqrt_q, 0],
+                          [dy / q, -dx / q, -1]])
             
             # Measurement noise covariance matrix (should be tuned)
             Q = np.diag([0.1, 0.1])  # Example values
@@ -143,12 +129,12 @@ class Particle:
             innovation = np.array([distance - predicted_distance, angle - predicted_angle])
     
             # Update landmark state
-            update = K @ innovation
-            landmark.x += update[0]
-            landmark.y += update[1]
-
+            #update = K @ innovation
+            landmark.x += K[0, 0] * innovation[0] + K[0, 1] * innovation[1]
+            landmark.y += K[1, 0] * innovation[0] + K[1, 1] * innovation[1]
+            
             # Update the covariance
-            I = np.eye(2)  # Identity matrix
+            I = np.eye(3)  # Identity matrix
             landmark.sigma = (I - K @ J) @ landmark.sigma
 
             # Update the weight using the measurement likelihood
@@ -157,12 +143,6 @@ class Particle:
                 weight_factor = 1 / np.sqrt(2 * np.pi * det_S)
                 exponent = -0.5 * innovation.T @ np.linalg.inv(S) @ innovation
                 self.weight *= weight_factor * np.exp(exponent)
-        
-    
-    ##UPDATE##
-    def update_particle(self, collected_data):
-        self.compute_weight(collected_data)
-        
     
     ##POSE##
     def get_pose(self):
