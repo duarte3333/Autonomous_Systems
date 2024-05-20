@@ -110,7 +110,7 @@ class ArucoSLAM:
                 u, _, _ = np.linalg.svd(essential_matrix)
 
                 dpixels = compute_marker_size_in_pixels(marker_corners)
-                dist = calculate_distance(dpixels, 515.2)
+                dist = calculate_distance(dpixels, 322.0704122808738) #515.2
                 #f = 0.28*dpixels*10
 
                 translation_vector = u[:, -1]
