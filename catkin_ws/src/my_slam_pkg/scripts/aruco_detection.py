@@ -4,19 +4,27 @@ import cv2
 import cv2.aruco as aruco
 import numpy as np
 from sensor_msgs.msg import CompressedImage
+from nav_msgs.msg import Odometry
 from cv_bridge import CvBridge #package that converts between ROS Image messages and OpenCV Image formats
 import yaml
 import os
 from cv_bridge import CvBridge, CvBridgeError
+from FastSlam import FastSlam
 
 class ArucoSLAM:
     def __init__(self):
         self.calibrate_camera()
+
+        self.create_slam()
         rospy.loginfo('ArucoSLAM Node Started')
         rospy.init_node('aruco_slam') # Initialize the ROS node
-       
+
         #subscribe node
         self.image_sub = rospy.Subscriber("/raspicam_node/image/compressed", CompressedImage, self.image_callback)
+        self.current_aruco = []  
+
+        self.odom_sub = rospy.Subscriber("/odom", Odometry, self.odom_callback)
+        self.odom = (0,0,0)
         # Calibrate the cameraiber("/camera/image_raw", Image, self.image_callback)
         self.bridge = CvBridge() # Initialize the CvBridge object
 
@@ -32,7 +40,19 @@ class ArucoSLAM:
         #self.detector = cv2.aruco.ArucoDetector(self.aruco_dict, self.parameters)
         self.dict = {15: [], 53: [], 60: [], 77: [], 100: []}
         self.map = {} 
+
+
+    def create_slam(self):
+        Odometry_noise= True  #Gausian noise na odometria
+        landmark_noise=True
+        window_size_pixel=700    #tamanho da janela
+        sample_rate=100  #sample rate (Hz)
+        size_m = 1#float(input('What should be the size of the map? n x n (in meters). n is: '))
+        central_bar_width=10
+        number_particles=30
     
+        self.my_slam = FastSlam(window_size_pixel, sample_rate, size_m, central_bar_width, 'ros', number_particles)
+        self.count = 0
     def calibrate_camera(self):
 
         dist =[0.1639958233797625, -0.271840030972792, 0.001055841660100477, -0.00166555973740089, 0.0]
@@ -43,6 +63,14 @@ class ArucoSLAM:
         self.camera_matrix = mtx.astype(float)
         self.dist_coeffs = dist.astype(float)
         
+    def odom_callback(self, odom_data):
+        x = odom_data.pose.pose.position.x
+        y = odom_data.pose.pose.position.y
+        theta = odom_data.pose.pose.orientation.z
+
+        self.odom = (x,y,theta)
+        self.run_SLAM()
+
     def image_callback(self, data):
        
         def compute_marker_size_in_pixels(marker_corners):
@@ -59,6 +87,7 @@ class ArucoSLAM:
             distance = (0.1 * focal_length) / marker_size_pixels
             return distance
 
+        self.current_aruco = []
         marker_length = 0.1  #length of the marker in meters, change this if we use another marker 
         world_coords = np.array([[-marker_length/2, -marker_length/2, 0],
                              [marker_length/2, -marker_length/2, 0],
@@ -101,14 +130,27 @@ class ArucoSLAM:
                     phi5 =  np.median(self.dict[ids[i][0]][-6:-1])
                     self.dict[ids[i][0]].pop(0)
                     cv2.putText(cv_image,  'ang='+str(round(phi5,3)), (int(marker_corners[1][0]-70),int(marker_corners[1][1])-10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255 ), 3)
+                    self.current_aruco.append((dist,phi5,ids[i][0]))
+                else:
+                    self.current_aruco.append((dist,phi,ids[i][0]))
 
-            rospy.loginfo("IDs detected: %s", ids)  # Correct logging of detected IDs
+            #rospy.loginfo("IDs detected: %s", ids)  # Correct logging of detected IDs
         cv2.imshow('Aruco Detection', cv_image)
         cv2.waitKey(3)
+
+    def run_SLAM(self):
+        if self.count<10:
+            self.my_slam.update_odometry(self.odom) #Is broken rn
+            self.count+=1
+        
+        else: #update landmarks with less frequency than the odometry
+            self.my_slam.compute_slam(self.odom,self.current_aruco)
+            self.count=0
 
     def run(self):
         rospy.spin() # Keep the node running
         cv2.destroyAllWindows() 
+
 if __name__ == '__main__':
     slam = ArucoSLAM()
     slam.run()
