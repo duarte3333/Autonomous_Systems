@@ -43,13 +43,11 @@ class ArucoSLAM:
 
 
     def create_slam(self):
-        window_size_pixel=700    #tamanho da janela
+        window_size_pixel=1000    #tamanho da janela
         sample_rate=100  #sample rate (Hz)
-        size_m = 3#float(input('What should be the size of the map? n x n (in meters). n is: '))
+        size_m = 5#float(input('What should be the size of the map? n x n (in meters). n is: '))
         central_bar_width=10
-        number_particles=30
-    
-        self.my_slam = FastSlam(window_size_pixel, sample_rate, size_m, central_bar_width, 'ros', number_particles)
+        self.my_slam = FastSlam(True, window_size_pixel, sample_rate, size_m, central_bar_width, 0.287)
         self.count = 0
     def calibrate_camera(self):
 
@@ -64,10 +62,15 @@ class ArucoSLAM:
     def odom_callback(self, odom_data):
         x = odom_data.pose.pose.position.x
         y = odom_data.pose.pose.position.y
-        theta = odom_data.pose.pose.orientation.z
-        self.odom = (x,y,theta)
-
+        xq = odom_data.pose.pose.orientation.x
+        yq = odom_data.pose.pose.orientation.y
+        zq = odom_data.pose.pose.orientation.z
+        wq = odom_data.pose.pose.orientation.w
+        quater = (xq,yq,zq,wq)
+        #self.odom = (x,y,theta)
+        self.odom = (x,y,quater, self.count)
         self.my_slam.update_odometry(self.odom)
+        self.count +=1
 
     def image_callback(self, data):
        

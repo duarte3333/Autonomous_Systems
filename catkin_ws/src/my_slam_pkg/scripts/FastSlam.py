@@ -46,7 +46,8 @@ class FastSlam:
  
         self.turtlebot_radius_pixel =self.turtlebot_radius * self.SCREEN_WIDTH/self.width_meters #from turtlebot website
 
-        self.old_odometry = [0,0]
+        self.old_odometry = [0.0,0.0]
+        self.old_yaw = 0
         self.num_particles = num_particles
         self.particles = self.initialize_particles()
         self.best_particle_ID=-1
@@ -63,22 +64,54 @@ class FastSlam:
         particles = []
         for _ in range(self.num_particles):
             # Initialize each particle with a random pose and empty landmarks
-            x = 0#np.random.uniform(0, self.width_meters)
-            y = 0#np.random.uniform(0, self.height_meters)
-            theta = 0#np.random.uniform(0, 2 * np.pi)
+            x = 0.8786575198173523#np.random.uniform(0, self.width_meters)
+            y = 0.6452775597572327#np.random.uniform(0, self.height_meters)
+            theta = 0.9483365985547553#np.random.uniform(0, 2 * np.pi)
             pose = np.array([x, y, theta])
             particles.append(Particle(pose,self.num_particles, self.turtlebot_L,self.std_dev_motion ))
         return particles
     
 
+ 
+    def euler_from_quaternion(self,x, y, z, w):
+            """
+            Convert a quaternion into euler angles (roll, pitch, yaw)
+            roll is rotation around x in radians (counterclockwise)
+            pitch is rotation around y in radians (counterclockwise)
+            yaw is rotation around z in radians (counterclockwise)
+            """
+            t0 = +2.0 * (w * x + y * z)
+            t1 = +1.0 - 2.0 * (x * x + y * y)
+            roll_x = math.atan2(t0, t1)
+        
+            t2 = +2.0 * (w * y - z * x)
+            t2 = +1.0 if t2 > +1.0 else t2
+            t2 = -1.0 if t2 < -1.0 else t2
+            pitch_y = math.asin(t2)
+        
+            t3 = +2.0 * (w * z + x * y)
+            t4 = +1.0 - 2.0 * (y * y + z * z)
+            yaw_z = math.atan2(t3, t4)
+        
+            return roll_x, pitch_y, yaw_z # in radians
+
     def update_odometry(self,odometry):
-        deltaRight=odometry[0]-self.old_odometry[0]
-        deltaLeft=odometry[1]-self.old_odometry[1]
+        count = odometry[3]
+        if count == 0:
+            self.old_odometry = copy.deepcopy(odometry)
+            _,_,yaw = self.euler_from_quaternion(odometry[2][0],odometry[2][1],odometry[2][2],odometry[2][3])
+            self.old_yaw = yaw
+        _,_,yaw = self.euler_from_quaternion(odometry[2][0],odometry[2][1],odometry[2][2],odometry[2][3])
+        deltaX=odometry[0]-self.old_odometry[0]
+        deltaY=odometry[1]-self.old_odometry[1]
+        deltaZ = yaw - self.old_yaw
+
         # Update each particle with motion and observation models
         for particle in self.particles:
             # Motion update
-            particle.motion_model([deltaLeft, deltaRight])
+            particle.motion_model([deltaX, deltaY, deltaZ])
         self.old_odometry= copy.deepcopy(odometry)
+        self.old_yaw = yaw
         self.update_screen()
 
 
@@ -93,7 +126,7 @@ class FastSlam:
             x,y,theta= self.particles[0].pose
             weights_here=[]
             for particle in self.particles:
-                particle.handle_landmark(landmark_dist, landmark_bearing_angle, landmark_id)
+                particle.handle_landmark(landmark_dist, math.radians(landmark_bearing_angle), landmark_id)
                 weights_here.append(particle.weight)    
                 #print particle with more weight 
                 #print('max weight', max(weights_here))  

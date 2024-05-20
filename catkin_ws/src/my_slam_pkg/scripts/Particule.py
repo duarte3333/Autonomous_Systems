@@ -35,20 +35,22 @@ class Particle:
 
         #deltaRight=odometry[0]-self.old_odometry[0]
         #deltaLeft=odometry[1]-self.old_odometry[1]
-        deltaLeft = odometry_delta[0]
-        deltaRight = odometry_delta[1]
+        deltaX = odometry_delta[0]*math.cos( -0.9483365985547553)
+        deltaY = odometry_delta[1]*math.sin( -0.9483365985547553)
+        deltaTheta = odometry_delta[2]
         #print('deltas: ',deltaRight,', ',  deltaLeft ) 
       
-        deltaD =(deltaRight + deltaLeft)/2
-        delta_theta=-(deltaRight - deltaLeft)/self.turtlebot_L#aqui tinha um menos
-        delta_x=deltaD*math.cos(theta)
-        delta_y=-deltaD*math.sin(theta)
+        #deltaD =(deltaRight + deltaLeft)/2
+        #delta_theta=-(deltaRight - deltaLeft)/self.turtlebot_L#aqui tinha um menos
+        #delta_x=deltaD*math.cos(theta)
+        #delta_y=-deltaD*math.sin(theta)
         noise=np.random.normal(0, self.std_dev_motion, 3)
-        new_x = x + delta_x*(1+noise[0])
-        new_y = y + delta_y*(1+noise[1])
-        new_theta = (theta + delta_theta*(1+noise[2])) % (2 * np.pi)
+        new_x = x + deltaX*(1+noise[0])
+        new_y = y + deltaY*(1+noise[1])
+        new_theta = (theta + deltaTheta*(1+noise[2])) % (2 * np.pi)
+      
         #print("Particle pose delta x, y",delta_x*(1+noise[0]),delta_y*(1+noise[1]) )
-        #print('Odometry: ',deltaRight,', ',  deltaLeft ) 
+        #print('Odometry: ',deltaRight,', ',  deltaLeft ) Left
         self.pose=np.array([new_x, new_y, new_theta])
 
         #self.old_odometry=odometry.copy()
