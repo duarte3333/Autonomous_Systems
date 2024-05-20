@@ -43,11 +43,9 @@ class ArucoSLAM:
 
 
     def create_slam(self):
-        Odometry_noise= True  #Gausian noise na odometria
-        landmark_noise=True
         window_size_pixel=700    #tamanho da janela
         sample_rate=100  #sample rate (Hz)
-        size_m = 1#float(input('What should be the size of the map? n x n (in meters). n is: '))
+        size_m = 3#float(input('What should be the size of the map? n x n (in meters). n is: '))
         central_bar_width=10
         number_particles=30
     
@@ -67,9 +65,9 @@ class ArucoSLAM:
         x = odom_data.pose.pose.position.x
         y = odom_data.pose.pose.position.y
         theta = odom_data.pose.pose.orientation.z
-
         self.odom = (x,y,theta)
-        self.run_SLAM()
+
+        self.my_slam.update_odometry(self.odom)
 
     def image_callback(self, data):
        
@@ -133,19 +131,10 @@ class ArucoSLAM:
                     self.current_aruco.append((dist,phi5,ids[i][0]))
                 else:
                     self.current_aruco.append((dist,phi,ids[i][0]))
-
+        self.my_slam.compute_slam(self.odom,self.current_aruco)
             #rospy.loginfo("IDs detected: %s", ids)  # Correct logging of detected IDs
         cv2.imshow('Aruco Detection', cv_image)
         cv2.waitKey(3)
-
-    def run_SLAM(self):
-        if self.count<10:
-            self.my_slam.update_odometry(self.odom) #Is broken rn
-            self.count+=1
-        
-        else: #update landmarks with less frequency than the odometry
-            self.my_slam.compute_slam(self.odom,self.current_aruco)
-            self.count=0
 
     def run(self):
         rospy.spin() # Keep the node running
