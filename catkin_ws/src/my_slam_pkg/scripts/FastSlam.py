@@ -64,9 +64,9 @@ class FastSlam:
         particles = []
         for _ in range(self.num_particles):
             # Initialize each particle with a random pose and empty landmarks
-            x = 0.8786575198173523#np.random.uniform(0, self.width_meters)
-            y = 0.6452775597572327#np.random.uniform(0, self.height_meters)
-            theta = 0.9483365985547553#np.random.uniform(0, 2 * np.pi)
+            x = 0#np.random.uniform(0, self.width_meters)
+            y = 0#np.random.uniform(0, self.height_meters)
+            theta = 0#np.random.uniform(0, 2 * np.pi)
             pose = np.array([x, y, theta])
             particles.append(Particle(pose,self.num_particles, self.turtlebot_L,self.std_dev_motion ))
         return particles
@@ -101,6 +101,7 @@ class FastSlam:
             self.old_odometry = copy.deepcopy(odometry)
             _,_,yaw = self.euler_from_quaternion(odometry[2][0],odometry[2][1],odometry[2][2],odometry[2][3])
             self.old_yaw = yaw
+
         _,_,yaw = self.euler_from_quaternion(odometry[2][0],odometry[2][1],odometry[2][2],odometry[2][3])
         deltaX=odometry[0]-self.old_odometry[0]
         deltaY=odometry[1]-self.old_odometry[1]
@@ -111,14 +112,14 @@ class FastSlam:
             # Motion update
             particle.motion_model([deltaX, deltaY, deltaZ])
         self.old_odometry= copy.deepcopy(odometry)
-        self.old_yaw = yaw
+        self.old_yaw = copy.deepcopy(yaw)
         self.update_screen()
 
 
 
-    def compute_slam(self, odometry, landmarks_in_sight):
+    def compute_slam(self, landmarks_in_sight):
         #compute and display FastSlam
-        self.update_odometry(odometry)
+        #self.update_odometry(odometry)
         # Landmark update
         weights_here=[]
         for landmark in landmarks_in_sight:
