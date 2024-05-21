@@ -112,10 +112,14 @@ class FastSlam:
         deltaY=odometry[1]-self.old_odometry[1]
         deltaTheta = yaw - self.old_yaw
 
+        x=odometry[0]
+        y=odometry[1]
+        
+
         # Update each particle with motion and observation models
         for particle in self.particles:
             # Motion update
-            particle.motion_model([deltaX, deltaY, deltaTheta])
+            particle.motion_model([x, y, yaw])
         self.old_odometry= copy.deepcopy(odometry)
         self.old_yaw = copy.deepcopy(yaw)
         self.update_screen()
@@ -150,6 +154,7 @@ class FastSlam:
            self.best_particle_ID=np.random.randint(len(self.particles))
 
         x,y,theta= self.particles[self.best_particle_ID].pose
+        y=-y
         # Calculate the vertices of the triangle for orientation
         turtlebot_pos= (int((x) * self.SCREEN_WIDTH/self.width_meters +self.left_coordinate + self.SCREEN_WIDTH/2), int((y) *self.SCREEN_HEIGHT/self.height_meters + self.SCREEN_HEIGHT/2)) #window should display a 5x5 m^2 area
         triangle_length = 0.8*self.turtlebot_radius_pixel
@@ -175,7 +180,7 @@ class FastSlam:
             pygame.draw.circle(self.screen, self.RED, (int((particle_x ) * self.SCREEN_WIDTH/self.width_meters + self.left_coordinate + self.SCREEN_WIDTH/2), int((particle_y)* self.SCREEN_HEIGHT/self.height_meters+ self.SCREEN_HEIGHT/2)), 3)
 
         for landmark_id, landmark in self.particles[self.best_particle_ID].landmarks.items():
-            landmark_x , landmark_y = landmark.x, landmark.y
+            landmark_x , landmark_y = landmark.x, -landmark.y
             #print('landmark_id',landmark_id, ' pose: ', landmark_x ,' ,', landmark_y)
             pygame.draw.circle(self.screen, self.BLACK, (int(landmark_x* self.SCREEN_WIDTH/self.width_meters + self.left_coordinate + self.SCREEN_WIDTH/2), int(landmark_y* self.SCREEN_HEIGHT/self.height_meters+ self.SCREEN_HEIGHT/2)), 5)
             

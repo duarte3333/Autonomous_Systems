@@ -84,7 +84,7 @@ class ArucoSLAM:
             yq = odom_data.pose.pose.orientation.y
             zq = odom_data.pose.pose.orientation.z
             wq = odom_data.pose.pose.orientation.w
-            quater = (xq,yq,zq,wq)
+            quater = [xq,yq,zq,wq]
             #self.odom = (x,y,theta)
             self.odom = (x,y,quater, self.count)
             self.my_slam.update_odometry(self.odom)

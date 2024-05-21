@@ -39,7 +39,7 @@ class Particle:
         new_theta = (theta + deltaTheta*(1+noise[2])) % (2 * np.pi)
          """
         
-        #versao do alex q tá uma merda
+        """  #versao do alex q tá uma merda
         deltaX = -odometry_delta[0]#*math.cos( -0.9483365985547553)
         deltaY = -odometry_delta[1]#*math.sin( -0.9483365985547553)
         deltaTheta = odometry_delta[2]
@@ -51,12 +51,20 @@ class Particle:
         new_x = x + deltaX_noisy * math.cos(theta) - deltaY_noisy * math.sin(theta)
         new_y = y + deltaX_noisy * math.sin(theta) + deltaY_noisy * math.cos(theta)
         new_theta = (theta + deltaTheta_noisy) % (2 * np.pi)
+        """
 
+        deltaX=odometry_delta[0]-x
+        deltaY=odometry_delta[1]-y
+        deltaTheta=odometry_delta[2]-theta
+        noise=np.random.normal(0, self.std_dev_motion, 3)
 
+        new_x = x + deltaX * (1 + noise[0])
+        new_y = y + deltaY * (1 + noise[1])
+        new_theta = (theta + deltaTheta * (1 + noise[2])) % (2 * np.pi)
 
         
-        self.pose=np.array([new_x, new_y, new_theta])
-
+        #self.pose=np.array([new_x, new_y, new_theta])
+        self.pose=np.array([odometry_delta[0],odometry_delta[1], odometry_delta[2]])
 
     ##WEIGHT##
     def handle_landmark(self, landmark_dist, landmark_bearing_angle, landmark_id):
