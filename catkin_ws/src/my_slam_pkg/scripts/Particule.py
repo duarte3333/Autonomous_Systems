@@ -27,33 +27,36 @@ class Particle:
     def motion_model(self, odometry_delta):
         """ This function updates the particle's pose based on odometry (motion model) """
         x, y, theta = self.get_pose()
-        #odometry = np.random.normal(0, self.std_dev_motion, 2)
-        #print(self.old_odometry, ' after calling')
-
-        #print('Odometry: ',odometry[0],', ',  odometry[1] ) 
-        #print('Odometry: ',self.old_odometry[0],', ',  self.old_odometry[1] , 'old') 
-
-        #deltaRight=odometry[0]-self.old_odometry[0]
-        #deltaLeft=odometry[1]-self.old_odometry[1]
+        
+        
+        """   #versão do dias
         deltaX = odometry_delta[0]*math.cos( -0.9483365985547553)
         deltaY = odometry_delta[1]*math.sin( -0.9483365985547553)
         deltaTheta = odometry_delta[2]
-        #print('deltas: ',deltaRight,', ',  deltaLeft ) 
-      
-        #deltaD =(deltaRight + deltaLeft)/2
-        #delta_theta=-(deltaRight - deltaLeft)/self.turtlebot_L#aqui tinha um menos
-        #delta_x=deltaD*math.cos(theta)
-        #delta_y=-deltaD*math.sin(theta)
         noise=np.random.normal(0, self.std_dev_motion, 3)
         new_x = x + deltaX*(1+noise[0])
         new_y = y + deltaY*(1+noise[1])
         new_theta = (theta + deltaTheta*(1+noise[2])) % (2 * np.pi)
-      
-        #print("Particle pose delta x, y",delta_x*(1+noise[0]),delta_y*(1+noise[1]) )
-        #print('Odometry: ',deltaRight,', ',  deltaLeft ) Left
+         """
+        
+        #versao do alex q tá uma merda
+        deltaX = -odometry_delta[0]#*math.cos( -0.9483365985547553)
+        deltaY = -odometry_delta[1]#*math.sin( -0.9483365985547553)
+        deltaTheta = odometry_delta[2]
+        noise=np.random.normal(0, self.std_dev_motion, 3)
+        deltaX_noisy = deltaX * (1 + noise[0])
+        deltaY_noisy = deltaY * (1 + noise[1])
+        deltaTheta_noisy = deltaTheta * (1 + noise[2])
+
+        new_x = x + deltaX_noisy * math.cos(theta) - deltaY_noisy * math.sin(theta)
+        new_y = y + deltaX_noisy * math.sin(theta) + deltaY_noisy * math.cos(theta)
+        new_theta = (theta + deltaTheta_noisy) % (2 * np.pi)
+
+
+
+        
         self.pose=np.array([new_x, new_y, new_theta])
 
-        #self.old_odometry=odometry.copy()
 
     ##WEIGHT##
     def handle_landmark(self, landmark_dist, landmark_bearing_angle, landmark_id):

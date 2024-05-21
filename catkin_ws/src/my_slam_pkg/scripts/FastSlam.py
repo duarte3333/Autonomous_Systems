@@ -4,6 +4,8 @@ import numpy as np
 import copy
 from aux_slam import resample
 from Particule import Particle
+import tf.transformations
+
 
 class FastSlam:
     def __init__(self,only_slam_window, window_size_pixel, sample_rate, size_m,central_bar_width, turtlebot_L,num_particles=50 , screen=None, resample_method="low variance",std_dev_motion = 0.5):
@@ -102,15 +104,18 @@ class FastSlam:
             _,_,yaw = self.euler_from_quaternion(odometry[2][0],odometry[2][1],odometry[2][2],odometry[2][3])
             self.old_yaw = yaw
 
-        _,_,yaw = self.euler_from_quaternion(odometry[2][0],odometry[2][1],odometry[2][2],odometry[2][3])
+        #_,_,yaw = self.euler_from_quaternion(odometry[2][0],odometry[2][1],odometry[2][2],odometry[2][3])
+        quaternion=odometry[2]
+        _, _, yaw = tf.transformations.euler_from_quaternion(quaternion)
+
         deltaX=odometry[0]-self.old_odometry[0]
         deltaY=odometry[1]-self.old_odometry[1]
-        deltaZ = yaw - self.old_yaw
+        deltaTheta = yaw - self.old_yaw
 
         # Update each particle with motion and observation models
         for particle in self.particles:
             # Motion update
-            particle.motion_model([deltaX, deltaY, deltaZ])
+            particle.motion_model([deltaX, deltaY, deltaTheta])
         self.old_odometry= copy.deepcopy(odometry)
         self.old_yaw = copy.deepcopy(yaw)
         self.update_screen()
