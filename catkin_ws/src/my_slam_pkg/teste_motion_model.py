@@ -8,6 +8,7 @@ from matplotlib.patches import Circle, Polygon
 import numpy as np
 import tf.transformations as tf_trans
 
+
 # Initialize global variables
 x_data = []
 y_data = []

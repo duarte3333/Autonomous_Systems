@@ -3,6 +3,7 @@ import math
 
 from Landmark import Landmark
 from numpy import linalg #this is for the inverse of a matrix
+from aux_slam import normalize_angle
 
 class Particle:
     """ x: x position of the particle
@@ -22,7 +23,8 @@ class Particle:
         self.default_weight=1/nr_particles
         self.J_matrix = np.zeros((2,2))
         self.adjusted_covariance = np.zeros((2,2))
-        
+
+            
     ##MOTION MODEL##
     def motion_model(self, odometry_delta):
         """ This function updates the particle's pose based on odometry (motion model) """
@@ -53,18 +55,38 @@ class Particle:
         new_theta = (theta + deltaTheta_noisy) % (2 * np.pi)
         """
 
-        deltaX=odometry_delta[0]-x
-        deltaY=odometry_delta[1]-y
-        deltaTheta=odometry_delta[2]-theta
-        noise=np.random.normal(0, self.std_dev_motion, 3)
+        # deltaX=odometry_delta[0]-x
+        # deltaY=odometry_delta[1]-y
+        # deltaTheta=odometry_delta[2]-theta
+        # noise=np.random.normal(0, self.std_dev_motion, 3)
 
-        new_x = x + deltaX * (1 + noise[0])
-        new_y = y + deltaY * (1 + noise[1])
-        new_theta = (theta + deltaTheta * (1 + noise[2])) % (2 * np.pi)
+        # new_x = x + deltaX * (1 + noise[0])
+        # new_y = y + deltaY * (1 + noise[1])
+        # new_theta = (theta + deltaTheta * (1 + noise[2])) % (2 * np.pi)
 
         
-        #self.pose=np.array([new_x, new_y, new_theta])
-        self.pose=np.array([odometry_delta[0],odometry_delta[1], odometry_delta[2]])
+        # #self.pose=np.array([new_x, new_y, new_theta])
+        # self.pose=np.array([odometry_delta[0],odometry_delta[1], odometry_delta[2]])
+        #noise=np.random.normal(0, self.std_dev_motion, 3)
+
+        delta_dist, delta_rot1, delta_rot2 = odometry_delta
+
+        alpha1=0.000001
+        alpha2=0.000001
+        alpha3=0.000001
+        alpha4=0.000001
+        deviation_dist = math.sqrt(alpha1 * delta_rot1**2 + alpha2 * delta_dist**2)
+        deviation_rot1 = math.sqrt(alpha3 * delta_dist**2 + alpha4 * delta_rot1**2 + alpha4 * delta_rot2**2)
+        deviation_rot2 = math.sqrt(alpha1 * delta_rot2**2 + alpha2 * delta_dist**2)
+
+        delta_dist -= np.random.normal(0,deviation_dist)
+        delta_rot1 -= np.random.normal(0,deviation_rot1)
+        delta_rot2 -= np.random.normal(0,deviation_rot2)
+        
+        new_x = x + delta_dist*math.cos(theta+delta_rot1)
+        new_y = y + delta_dist*math.sin(theta+delta_rot1)
+        new_theta = normalize_angle(theta + delta_rot1+delta_rot2)
+        self.pose=np.array([new_x,new_y, new_theta])
 
     ##WEIGHT##
     def handle_landmark(self, landmark_dist, landmark_bearing_angle, landmark_id):

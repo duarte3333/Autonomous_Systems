@@ -2,7 +2,7 @@ import pygame
 import math 
 import numpy as np
 import copy
-from aux_slam import resample
+from aux_slam import resample, normalize_angle
 from Particule import Particle
 import tf.transformations
 
@@ -58,8 +58,6 @@ class FastSlam:
 
         #initialize FastSlam variables
 
-
-
         return
     
     def initialize_particles(self, landmarks={}):
@@ -94,32 +92,24 @@ class FastSlam:
             t3 = +2.0 * (w * z + x * y)
             t4 = +1.0 - 2.0 * (y * y + z * z)
             yaw_z = math.atan2(t3, t4)
-        
+
+            yaw_z = (yaw_z + np.pi) % (2 * np.pi) - np.pi
             return roll_x, pitch_y, yaw_z # in radians
 
     def update_odometry(self,odometry):
-        count = odometry[3]
-        if count == 0:
-            self.old_odometry = copy.deepcopy(odometry)
-            _,_,yaw = self.euler_from_quaternion(odometry[2][0],odometry[2][1],odometry[2][2],odometry[2][3])
-            self.old_yaw = yaw
-
-        #_,_,yaw = self.euler_from_quaternion(odometry[2][0],odometry[2][1],odometry[2][2],odometry[2][3])
-        quaternion=odometry[2]
-        _, _, yaw = tf.transformations.euler_from_quaternion(quaternion)
-
-        deltaX=odometry[0]-self.old_odometry[0]
-        deltaY=odometry[1]-self.old_odometry[1]
-        deltaTheta = yaw - self.old_yaw
-
-        x=odometry[0]
-        y=odometry[1]
         
+        quaternion = [odometry[2][0],odometry[2][1],odometry[2][2],odometry[2][3]]
+        (roll, pitch, yaw) = tf.transformations.euler_from_quaternion(quaternion)
+        yaw = normalize_angle(yaw)
+  
+        delta_dist = math.sqrt((odometry[0]-self.old_odometry[0])**2+(odometry[1]-self.old_odometry[1])**2)
+        delta_rot1 = normalize_angle(math.atan2(odometry[1]-self.old_odometry[1],odometry[0]-self.old_odometry[0])- self.old_yaw)
+        delta_rot2 = normalize_angle(yaw - self.old_yaw- delta_rot1)
 
         # Update each particle with motion and observation models
         for particle in self.particles:
             # Motion update
-            particle.motion_model([x, y, yaw])
+            particle.motion_model([delta_dist, delta_rot1, delta_rot2])
         self.old_odometry= copy.deepcopy(odometry)
         self.old_yaw = copy.deepcopy(yaw)
         self.update_screen()
@@ -177,10 +167,12 @@ class FastSlam:
         #draw current particles
         for particle in self.particles:
             particle_x , particle_y, _ = particle.pose
+            particle_y = -particle_y
             pygame.draw.circle(self.screen, self.RED, (int((particle_x ) * self.SCREEN_WIDTH/self.width_meters + self.left_coordinate + self.SCREEN_WIDTH/2), int((particle_y)* self.SCREEN_HEIGHT/self.height_meters+ self.SCREEN_HEIGHT/2)), 3)
 
         for landmark_id, landmark in self.particles[self.best_particle_ID].landmarks.items():
-            landmark_x , landmark_y = landmark.x, -landmark.y
+            landmark_x , landmark_y = landmark.x, landmark.y
+            
             #print('landmark_id',landmark_id, ' pose: ', landmark_x ,' ,', landmark_y)
             pygame.draw.circle(self.screen, self.BLACK, (int(landmark_x* self.SCREEN_WIDTH/self.width_meters + self.left_coordinate + self.SCREEN_WIDTH/2), int(landmark_y* self.SCREEN_HEIGHT/self.height_meters+ self.SCREEN_HEIGHT/2)), 5)
             

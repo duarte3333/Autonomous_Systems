@@ -11,6 +11,8 @@ import os
 from cv_bridge import CvBridge, CvBridgeError
 from FastSlam import FastSlam
 import threading
+import copy
+import math
 
 
 def compute_marker_size_in_pixels(marker_corners):
@@ -39,7 +41,7 @@ class ArucoSLAM:
         self.current_aruco = []  
 
         self.odom_sub = rospy.Subscriber("/odom", Odometry, self.odom_callback)
-        self.odom = (0,0,0)
+        self.odom =[0,0,0]
         # Calibrate the cameraiber("/camera/image_raw", Image, self.image_callback)
         self.bridge = CvBridge() # Initialize the CvBridge object
 
@@ -60,9 +62,9 @@ class ArucoSLAM:
 
 
     def create_slam(self):
-        window_size_pixel=1000    #tamanho da janela
-        sample_rate=100  #sample rate (Hz)
-        size_m = 5#float(input('What should be the size of the map? n x n (in meters). n is: '))
+        window_size_pixel=700    #tamanho da janela
+        sample_rate=5  #sample rate (Hz)
+        size_m = 3#float(input('What should be the size of the map? n x n (in meters). n is: '))
         central_bar_width=10
         self.my_slam = FastSlam(True, window_size_pixel, sample_rate, size_m, central_bar_width, 0.287)
         self.count = 0
@@ -85,11 +87,14 @@ class ArucoSLAM:
             zq = odom_data.pose.pose.orientation.z
             wq = odom_data.pose.pose.orientation.w
             quater = [xq,yq,zq,wq]
-            #self.odom = (x,y,theta)
-            self.odom = (x,y,quater, self.count)
+            self.odom = [x,y,quater]
+            if self.count == 0:
+                self.tara = copy.deepcopy(self.odom)
+                self.count +=1
+
+            self.odom[0] -= self.tara[0]
+            self.odom[1] -= self.tara[1]
             self.my_slam.update_odometry(self.odom)
-            self.count +=1
-    
     
     def image_callback(self, data):
         with self.lock:
