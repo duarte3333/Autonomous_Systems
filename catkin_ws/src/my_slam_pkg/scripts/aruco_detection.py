@@ -62,12 +62,13 @@ class ArucoSLAM:
 
 
     def create_slam(self):
-        window_size_pixel=700    #tamanho da janela
+        window_size_pixel=900    #tamanho da janela
         sample_rate=5  #sample rate (Hz)
         size_m = 3#float(input('What should be the size of the map? n x n (in meters). n is: '))
         central_bar_width=10
         self.my_slam = FastSlam(True, window_size_pixel, sample_rate, size_m, central_bar_width, 0.287)
         self.count = 0
+
     def calibrate_camera(self):
 
         dist =[0.1639958233797625, -0.271840030972792, 0.001055841660100477, -0.00166555973740089, 0.0]
