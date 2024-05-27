@@ -8,10 +8,15 @@ project(my_slam_pkg)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  nav_msgs
+  roscpp
   rospy
-  sensor_msgs
   std_msgs
+  cv_bridge
+  image_transport
+  sensor_msgs
+  geometry_msgs
+  nav_msgs
+  aruco_ros
 )
 
 ## System dependencies are found with CMake's conventions
@@ -104,6 +109,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
+  CATKIN_DEPENDS roscpp rospy std_msgs cv_bridge image_transport sensor_msgs geometry_msgs nav_msgs aruco_ros
+
 #  INCLUDE_DIRS include
 #  LIBRARIES my_slam_pkg
 #  CATKIN_DEPENDS nav_msgs rospy sensor_msgs std_msgs

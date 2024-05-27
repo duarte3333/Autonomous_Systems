@@ -1,8 +1,8 @@
-# Install script for directory: /home/duarte/Documents/AS_project/catkin_ws/src/my_slam_pkg
+# Install script for directory: /home/alexandre/Documents/Git_Saut/Autonomous_Systems/catkin_ws/src/my_slam_pkg
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/home/duarte/Documents/AS_project/catkin_ws/install")
+  set(CMAKE_INSTALL_PREFIX "/home/alexandre/Documents/Git_Saut/Autonomous_Systems/catkin_ws/install")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -38,17 +38,17 @@ if(NOT DEFINED CMAKE_CROSSCOMPILING)
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" TYPE FILE FILES "/home/duarte/Documents/AS_project/catkin_ws/build/my_slam_pkg/catkin_generated/installspace/my_slam_pkg.pc")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" TYPE FILE FILES "/home/alexandre/Documents/Git_Saut/Autonomous_Systems/catkin_ws/build/my_slam_pkg/catkin_generated/installspace/my_slam_pkg.pc")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/my_slam_pkg/cmake" TYPE FILE FILES
-    "/home/duarte/Documents/AS_project/catkin_ws/build/my_slam_pkg/catkin_generated/installspace/my_slam_pkgConfig.cmake"
-    "/home/duarte/Documents/AS_project/catkin_ws/build/my_slam_pkg/catkin_generated/installspace/my_slam_pkgConfig-version.cmake"
+    "/home/alexandre/Documents/Git_Saut/Autonomous_Systems/catkin_ws/build/my_slam_pkg/catkin_generated/installspace/my_slam_pkgConfig.cmake"
+    "/home/alexandre/Documents/Git_Saut/Autonomous_Systems/catkin_ws/build/my_slam_pkg/catkin_generated/installspace/my_slam_pkgConfig-version.cmake"
     )
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/my_slam_pkg" TYPE FILE FILES "/home/duarte/Documents/AS_project/catkin_ws/src/my_slam_pkg/package.xml")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/my_slam_pkg" TYPE FILE FILES "/home/alexandre/Documents/Git_Saut/Autonomous_Systems/catkin_ws/src/my_slam_pkg/package.xml")
 endif()
 

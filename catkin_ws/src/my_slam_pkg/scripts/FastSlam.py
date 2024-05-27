@@ -134,17 +134,18 @@ class FastSlam:
        
         self.particles , self.best_particle_ID = resample(self.particles, self.num_particles, self.resample_method, self.best_particle_ID)
         #use latest estimation to update_screen
-        self.update_screen()
+        self.update_screen(landmarks_in_sight)
+        
         
 
 
-    def update_screen(self):
+    def update_screen(self, landmarks_in_sight=None):
         if self.best_particle_ID==-1:
            # x,y,theta= 0,0,0
            self.best_particle_ID=np.random.randint(len(self.particles))
 
         x,y,theta= self.particles[self.best_particle_ID].pose
-        y=-y
+        #y=-y
         # Calculate the vertices of the triangle for orientation
         turtlebot_pos= (int((x) * self.SCREEN_WIDTH/self.width_meters +self.left_coordinate + self.SCREEN_WIDTH/2), int((y) *self.SCREEN_HEIGHT/self.height_meters + self.SCREEN_HEIGHT/2)) #window should display a 5x5 m^2 area
         triangle_length = 0.8*self.turtlebot_radius_pixel
@@ -167,7 +168,7 @@ class FastSlam:
         #draw current particles
         for particle in self.particles:
             particle_x , particle_y, _ = particle.pose
-            particle_y = -particle_y
+            #particle_y = -particle_y
             pygame.draw.circle(self.screen, self.RED, (int((particle_x ) * self.SCREEN_WIDTH/self.width_meters + self.left_coordinate + self.SCREEN_WIDTH/2), int((particle_y)* self.SCREEN_HEIGHT/self.height_meters+ self.SCREEN_HEIGHT/2)), 3)
 
         for landmark_id, landmark in self.particles[self.best_particle_ID].landmarks.items():

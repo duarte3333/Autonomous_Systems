@@ -1,2 +1,2 @@
 my_slam_pkg:my_turtle_package
--DCATKIN_DEVEL_PREFIX=/home/duarte/Documents/AS_project/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/duarte/Documents/AS_project/catkin_ws/install -G Unix Makefiles
+-DCATKIN_DEVEL_PREFIX=/home/alexandre/Documents/Git_Saut/Autonomous_Systems/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/alexandre/Documents/Git_Saut/Autonomous_Systems/catkin_ws/install -G Unix Makefiles
