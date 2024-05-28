@@ -48,7 +48,15 @@ def cart2pol(x, y):
     rho = np.sqrt(x**2 + y**2)
     phi = np.arctan2(y, x)
     return(rho, phi)
-        
+    
+def compute_bearing_angle(tvec):
+        x = tvec[0]
+        z = tvec[2]
+        bearing_angle_rad = np.arctan2(x, z)
+        bearing_angle_deg = np.degrees(bearing_angle_rad)
+    
+        return bearing_angle_deg
+
 def calculate_distance(marker_size_pixels, focal_length):
     distance = (0.25 * focal_length) / marker_size_pixels
     return distance
@@ -97,6 +105,14 @@ class ArucoSLAM:
 
         dist =[0.1639958233797625, -0.271840030972792, 0.001055841660100477, -0.00166555973740089, 0.0]
         K = [322.0704122808738, 0.0, 199.2680620421962, 0.0, 320.8673986158544, 155.2533082600705, 0.0, 0.0, 1.0]
+        P = [329.2483825683594, 0.0, 198.4101510452074, 0.0, 0.0, 329.1044006347656, 155.5057121208347, 0.0, 0.0, 0.0, 1.0, 0.0]
+
+        K[2] = 320  # K[1,2]
+        K[5] = 240  # K[2,2]
+
+        P[2] = 320  # Tx
+        P[6] = 240  # Ty
+        
         mtx = np.array(K).reshape(3, 3)
         dist = np.array(dist).reshape(1,5)
 
@@ -142,33 +158,19 @@ class ArucoSLAM:
                 for i in range(len(ids)):
                     marker_corners = corners[i][0]
                     cv2.polylines(cv_image, [np.int32(marker_corners)], True, (0, 255, 0), 2)  # Bounding Box
-                    #_, tvec, _ = cv2.aruco.estimatePoseSingleMarkers(corners[i], 0.1, self.camera_matrix, self.dist_coeffs)
-                    homography, _ = cv2.findHomography(world_coords, marker_corners, cv2.RANSAC,12)
-                    essential_matrix = np.dot(np.dot(np.linalg.inv(self.camera_matrix), homography),self.camera_matrix)
-                    u, _, _ = np.linalg.svd(essential_matrix)
+                    _, tvec, _ = cv2.aruco.estimatePoseSingleMarkers(corners[i], 0.25, self.camera_matrix, self.dist_coeffs)
 
-                    dpixels = compute_marker_size_in_pixels(marker_corners)
-                    dist = calculate_distance(dpixels, 322.0704122808738) #51<5.2
-                    
-                    #f = 0.28*dpixels*10
+                    #CIRCLES
+                    #teste = np.matmul(self.camera_teste, np.array(np.append(tvec,1)).reshape(4,1))
+                    #centroid = np.mean(marker_corners, axis=0)
+                    #cv2.circle(cv_image, (int(teste[0][0]/teste[2][0]),int(teste[1][0]/teste[2][0])), radius=10, color=(0, 0, 255), thickness=-1)
+                    cv2.circle(cv_image, (320,240), radius=10, color=(255, 0, 0), thickness=-1)
 
-                    translation_vector = u[:, -1]
-                    translation_vector /= np.linalg.norm(translation_vector)
-                    translation_vector *=dist
-
-                    #translation_vector += np.array([])
-                    #dist=
-                    translation_vector= transform_camera_to_robot(translation_vector)
-                    dist = np.linalg.norm(translation_vector)
-                    _,phi = cart2pol(translation_vector[2],translation_vector[0])
-                    phi = phi *180 /np.pi
-
+                    tvec = transform_camera_to_robot(tvec[0][0])
+                    phi = compute_bearing_angle(tvec)
+                    dist = tvec[2]
                     self.dict[ids[i][0]].append(phi)
-
-                    # ID of the markersource ~/.bashrc
-
-
-                    cv2.putText(cv_image, str(ids[i][0]), (int(marker_corners[0][0] - 100), int(marker_corners[0][1]) - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3)
+                   # cv2.putText(cv_image, str(ids[i][0]), (int(marker_corners[0][0] - 100), int(marker_corners[0][1]) - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3)
                     cv2.putText(cv_image, 'dist= ' + str(round(dist, 3)), (int(marker_corners[2][0] - 80), int(marker_corners[2][1]) + 45), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
 
                     if len(self.dict[ids[i][0]]) >= 3:                
