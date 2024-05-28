@@ -174,12 +174,12 @@ class ArucoSLAM:
                     cv2.putText(cv_image, 'dist= ' + str(round(dist, 3)), (int(marker_corners[2][0] - 80), int(marker_corners[2][1]) + 45), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
 
                     if len(self.dict[ids[i][0]]) >= 3:                
-                        phi5 =  -np.median(np.sort(self.dict[ids[i][0]][-4:-1])) #I HAVE CHANGED THIS SIGN
+                        phi5 =  np.median(np.sort(self.dict[ids[i][0]][-4:-1])) #I HAVE CHANGED THIS SIGN
                         self.dict[ids[i][0]].pop(0)
                         cv2.putText(cv_image,  'ang='+str(round(phi5,3)), (int(marker_corners[1][0]-70),int(marker_corners[1][1])-10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255 ), 3)
                         self.current_aruco.append((dist,phi5,ids[i][0]))
                     else:
-                        self.current_aruco.append((dist,-phi,ids[i][0]))
+                        self.current_aruco.append((dist,phi,ids[i][0]))
             self.my_slam.compute_slam(self.current_aruco)
                 #rospy.loginfo("IDs detected: %s", ids)  # Correct logging of detected IDs
             cv2.imshow('Aruco Detection', cv_image)
