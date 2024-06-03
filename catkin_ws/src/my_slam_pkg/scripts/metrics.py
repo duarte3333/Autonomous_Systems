@@ -75,13 +75,71 @@ def rpe(G,T):
     return (rpe_trans, rpe_rot)
 
 
+def landmarks_PoseMeasured(map_nr):
+    if map_nr==1:
+        x=np.array([1.06, -0.88,-0.5,-0.47,0])
+        y=np.array([0.61, 0.5,-0.32,1.93,0])
+    elif map_nr==2:
+        x=np.array([-0.9,-0.6,-1.15,-0.15,0])
+        y=np.array([3.6,-1.3,-0.66,3.9,0])
+    else:
+        print('Not a valid map nr (must be either 1 or 2)')
+        return None 
+    IDS=np.array([15, 53,60,77,100])
 
-def compute_metrics(slam,ground_truth):
+    return np.stack((IDS,x,y))
+
+def SVD_rigidTransform(A,B):
+    centroid_A = np.mean(A, axis=1).reshape(2, 1)
+    centroid_B = np.mean(B, axis=1).reshape(2, 1)
+    
+    A_prime = A - centroid_A
+    B_prime = B - centroid_B
+    
+    H = A_prime @ B_prime.T
+    # Compute the SVD of H
+    U, _, Vt = np.linalg.svd(H)
+    V = Vt.T
+    
+    Rot = V @ U.T
+    
+    t = centroid_B - Rot @ centroid_A
+
+    return Rot, t
+
+def applyRT(matrix, Rot, T):
+    rotated_matrix = Rot @ matrix
+    return rotated_matrix + T
+
+
+def MSE(A,B):
+    MSE_metric=0
+    for i in range(A.shape[1]):
+        MSE_metric += (A[i,0]-B[i,0])**2 + (A[i,1]-B[i,1])**2
+    return MSE_metric
+
+def show_metrics(ate_e, rpe_e, MSE_landmarks):
+    print('Metrics:\n')
+    print('ATE: ', ate_e)
+    print('RPT: ',rpe_e)
+    print('Minimum possible MSE between map and landmarks: ', MSE_landmarks)
+    print('---Metrics completed---\n')
+
+
+def landmark_metrics(map_nr, slam):
+    slam_landmarks= slam.BestLandmarks()
+    landmarks_GroundTruth=landmarks_PoseMeasured(map_nr)
+    Rot,T=SVD_rigidTransform(slam_landmarks[1:3,:],landmarks_GroundTruth[1:3,:])
+    slam_landmarks = applyRT(slam_landmarks, Rot, T)
+    MSE_metric = MSE(slam_landmarks[1:3,:],landmarks_GroundTruth[1:3,:])
+    return MSE_metric
+
+def compute_metrics(slam,ground_truth, map_nr):
     trajectory = slam.get_trajectory()
     trajectory = np.array(trajectory)
     ate_e = ate(ground_truth, trajectory)
     rpe_e = rpe(ground_truth,trajectory)
 
-    return ate_e, rpe_e
-
-    
+    MSE_landmarks = landmark_metrics(map_nr, slam)
+    show_metrics(ate_e, rpe_e, MSE_landmarks)
+    return ate_e, rpe_e, MSE_landmarks

@@ -9,15 +9,17 @@ from cv_bridge import CvBridge, CvBridgeError
 from FastSlam import FastSlam
 import threading
 import copy
+import sys
+import os
 from metrics import compute_metrics
 
 def transform_camera_to_robot(translation_vector):
     R_cam_to_robot = np.array([
-    [1, 0, 0],  # Replace these with the actual rotation matrix values
+    [1, 0, 0],  
     [0, 1, 0],
     [0, 0, 1]
     ])
-    T_cam_to_robot = np.array([0.076, 0, 0.103])  # Replace this with the actual translation vector
+    T_cam_to_robot = np.array([0.076, 0, 0.103])  
 
     # Function to trans
     # Convert translation_vector to homogeneous coordinates
@@ -181,57 +183,6 @@ class ArucoSLAM:
                 #rospy.loginfo("IDs detected: %s", ids)  # Correct logging of detected IDs
             cv2.imshow('Aruco Detection', cv_image)
             cv2.waitKey(3)
-    """
-    def image_callback(self, data):
-        with self.lock:
-            self.current_aruco = []
-            marker_length = 0.25  # Length of the marker in meters
-
-            try:
-                cv_image = self.bridge.compressed_imgmsg_to_cv2(data, "bgr8")
-            except CvBridgeError as e:
-                rospy.logerr("CvBridge Error: {0}".format(e))
-                return
-
-            gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)  # Convert the image to grayscale
-            corners, ids, _ = aruco.detectMarkers(gray, self.aruco_dict, parameters=self.parameters)
-            if ids is not None and len(ids) > 0:
-                for i in range(len(ids)):
-                    marker_corners = corners[i][0]
-                    cv2.polylines(cv_image, [np.int32(marker_corners)], True, (0, 255, 0), 2)  # Bounding Box
-                    
-                    # Estimate pose of each marker
-                    rvecs, tvecs, _ = aruco.estimatePoseSingleMarkers(corners[i], marker_length, self.camera_matrix, self.dist_coeffs)
-                    
-                    # Draw axis for each marker
-                   # aruco.drawAxis(cv_image, self.camera_matrix, self.dist_coeffs, rvecs[0], tvecs[0], marker_length * 0.5)
-                    
-                    # Compute the distance to the marker
-                    dist = np.linalg.norm(tvecs[0][0])
-                    
-                    # Calculate the angle of the marker relative to the camera
-                    tvec = tvecs[0][0]
-                    angle_rad = np.arctan2(tvec[0], tvec[2])  # Angle in radians
-                    angle_deg = np.degrees(angle_rad)  # Convert to degrees
-                    
-                    self.dict[ids[i][0]].append(angle_deg)
-
-                    # ID of the marker
-                    cv2.putText(cv_image, str(ids[i][0]), (int(marker_corners[0][0] - 10), int(marker_corners[0][1]) - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3)
-                    cv2.putText(cv_image, 'dist= ' + str(round(dist, 3)), (int(marker_corners[2][0] - 80), int(marker_corners[2][1]) + 45), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
-
-                    if len(self.dict[ids[i][0]]) >= 5:                
-                        phi5 = -np.median(np.sort(self.dict[ids[i][0]][-6:-1]))
-                        self.dict[ids[i][0]].pop(0)
-                        cv2.putText(cv_image, 'ang=' + str(round(-phi5, 3)), (int(marker_corners[1][0] - 70), int(marker_corners[1][1]) - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 3)
-                        self.current_aruco.append((dist, phi5, ids[i][0]))
-                    else:
-                        self.current_aruco.append((dist, angle_deg, ids[i][0]))
-            self.my_slam.compute_slam(self.current_aruco)
-            cv2.imshow('Aruco Detection', cv_image)
-            cv2.waitKey(3)
-    """   
-    
     
     # def run(self):
     #     rospy.spin() # Keep the node running
@@ -259,12 +210,43 @@ class ArucoSLAM:
             return False  # Playback ongoing
     def get_trajectory(self):
         return self.my_slam.get_best_trajectory()
+    
+
+
+
+
 if __name__ == '__main__':
     rosbag_time = int(input("Enter rosbag time \n"))
+    rosbag_nr = int(input('Which Map is this? (1,2)'))
     slam = ArucoSLAM(rosbag_time)
+    gt = 0 
     slam.run()
-    gt = 0 #To implement ground_truth
-    ate, rpe = compute_metrics(slam, gt)
+    ate, rpe, mse_landmarks= compute_metrics(slam, gt, rosbag_nr)
+
+    
+    
+    
+""" 
+if __name__ == '__main__':
+    rosbag_time = int(input("Enter rosbag time \n"))
+    rosbag_nr = int(input('Which Map is this? (1,2)'))
+    slam = ArucoSLAM(rosbag_time)
+    gt = 0 
+    try:
+        slam.run()
+        gt += 0 #To implement ground_truth
+    except KeyboardInterrupt:
+        try:
+            ate, rpe, mse_landmarks= compute_metrics(slam, gt, rosbag_nr)
+            try:
+                sys.exit(130)
+            except SystemExit:
+                os._exit(130)
+        except KeyboardInterrupt:
+            print('Exiting with no more metrics')
+    
+    
+     """
 
 """
 
