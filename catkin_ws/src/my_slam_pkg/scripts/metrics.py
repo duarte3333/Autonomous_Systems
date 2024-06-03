@@ -77,7 +77,7 @@ def rpe(G,T):
 
 
 def compute_metrics(slam,ground_truth):
-    trajectory = slam.get_best_trajectory()
+    trajectory = slam.get_trajectory()
     trajectory = np.array(trajectory)
     ate_e = ate(ground_truth, trajectory)
     rpe_e = rpe(ground_truth,trajectory)

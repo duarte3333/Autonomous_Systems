@@ -58,7 +58,8 @@ def calculate_distance(marker_size_pixels, focal_length):
     return distance
 
 class ArucoSLAM:
-    def __init__(self):
+    def __init__(self, rosbag_time):
+        self.rosbag_time = rosbag_time+5
         self.calibrate_camera()
         self.lock = threading.Lock()
         self.create_slam()
@@ -240,7 +241,7 @@ class ArucoSLAM:
         start_time = rospy.Time.now() 
         while not rospy.is_shutdown():  # Continue running until ROS node is shutdown
             # Check if the rosbag playback has finished
-            if self.rosbag_finished(start_time,105):  # Implement this function to check if the rosbag playback has finished
+            if self.rosbag_finished(start_time,self.rosbag_time):  # Implement this function to check if the rosbag playback has finished
                 rospy.loginfo("Rosbag playback finished. Shutting down...")
                 rospy.signal_shutdown("Rosbag playback finished")  # Shutdown ROS node
                 break  # Exit the loop
@@ -256,12 +257,14 @@ class ArucoSLAM:
             return True  # Playback finished
         else:
             return False  # Playback ongoing
-
+    def get_trajectory(self):
+        return self.my_slam.get_best_trajectory()
 if __name__ == '__main__':
-    slam = ArucoSLAM()
+    rosbag_time = int(input("Enter rosbag time \n"))
+    slam = ArucoSLAM(rosbag_time)
     slam.run()
-    ground = 0 #To implement
-    ate, rpe = compute_metrics(slam, ground)
+    gt = 0 #To implement ground_truth
+    ate, rpe = compute_metrics(slam, gt)
 
 """
 
