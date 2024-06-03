@@ -5,15 +5,11 @@ import cv2.aruco as aruco
 import numpy as np
 from sensor_msgs.msg import CompressedImage
 from nav_msgs.msg import Odometry
-from cv_bridge import CvBridge #package that converts between ROS Image messages and OpenCV Image formats
-import yaml
-import os
 from cv_bridge import CvBridge, CvBridgeError
 from FastSlam import FastSlam
 import threading
 import copy
-import math
-
+from metrics import compute_metrics
 
 def transform_camera_to_robot(translation_vector):
     R_cam_to_robot = np.array([
@@ -236,13 +232,36 @@ class ArucoSLAM:
     """   
     
     
+    # def run(self):
+    #     rospy.spin() # Keep the node running
+    #     cv2.destroyAllWindows() 
+        
     def run(self):
-        rospy.spin() # Keep the node running
-        cv2.destroyAllWindows() 
+        start_time = rospy.Time.now() 
+        while not rospy.is_shutdown():  # Continue running until ROS node is shutdown
+            # Check if the rosbag playback has finished
+            if self.rosbag_finished(start_time,105):  # Implement this function to check if the rosbag playback has finished
+                rospy.loginfo("Rosbag playback finished. Shutting down...")
+                rospy.signal_shutdown("Rosbag playback finished")  # Shutdown ROS node
+                break  # Exit the loop
+
+            rospy.sleep(0.1) # Process ROS callbacks once
+        cv2.destroyAllWindows()  # Close OpenCV windows when node exits
+    
+    def rosbag_finished(self, start_time, duration):
+        # Calculate the expected end time based on the start time and duration of rosbag playback
+        end_time = start_time + rospy.Duration.from_sec(duration)
+        # Check if the current ROS time exceeds the expected end time
+        if rospy.Time.now() > end_time:
+            return True  # Playback finished
+        else:
+            return False  # Playback ongoing
 
 if __name__ == '__main__':
     slam = ArucoSLAM()
     slam.run()
+    ground = 0 #To implement
+    ate, rpe = compute_metrics(slam, ground)
 
 """
 

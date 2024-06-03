@@ -69,32 +69,8 @@ class FastSlam:
             theta = 0#np.random.uniform(0, 2 * np.pi)
             pose = np.array([x, y, theta])
             particles.append(Particle(pose,self.num_particles, self.turtlebot_L,self.std_dev_motion ))
+
         return particles
-    
-
- 
-    def euler_from_quaternion(self,x, y, z, w):
-            """
-            Convert a quaternion into euler angles (roll, pitch, yaw)
-            roll is rotation around x in radians (counterclockwise)
-            pitch is rotation around y in radians (counterclockwise)
-            yaw is rotation around z in radians (counterclockwise)
-            """
-            t0 = +2.0 * (w * x + y * z)
-            t1 = +1.0 - 2.0 * (x * x + y * y)
-            roll_x = math.atan2(t0, t1)
-        
-            t2 = +2.0 * (w * y - z * x)
-            t2 = +1.0 if t2 > +1.0 else t2
-            t2 = -1.0 if t2 < -1.0 else t2
-            pitch_y = math.asin(t2)
-        
-            t3 = +2.0 * (w * z + x * y)
-            t4 = +1.0 - 2.0 * (y * y + z * z)
-            yaw_z = math.atan2(t3, t4)
-
-            yaw_z = (yaw_z + np.pi) % (2 * np.pi) - np.pi
-            return roll_x, pitch_y, yaw_z # in radians
 
     def update_odometry(self,odometry):
         
@@ -135,8 +111,6 @@ class FastSlam:
         self.particles , self.best_particle_ID = resample(self.particles, self.num_particles, self.resample_method, self.best_particle_ID)
         #use latest estimation to update_screen
         self.update_screen(landmarks_in_sight)
-        
-        
 
 
     def update_screen(self, landmarks_in_sight=None):
@@ -185,6 +159,7 @@ class FastSlam:
         if self.only_slam_window:
             pygame.display.flip()
 
-
+    def get_best_trajectory(self):
+        return self.particles[self.best_particle_ID].trajectory
 
 

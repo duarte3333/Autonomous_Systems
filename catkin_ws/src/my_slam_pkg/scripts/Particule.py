@@ -23,52 +23,13 @@ class Particle:
         self.default_weight=1/nr_particles
         self.J_matrix = np.zeros((2,2))
         self.adjusted_covariance = np.zeros((2,2))
-
+        self.trajectory = []
             
     ##MOTION MODEL##
     def motion_model(self, odometry_delta):
         """ This function updates the particle's pose based on odometry (motion model) """
         x, y, theta = self.get_pose()
-        
-        
-        """   #versão do dias
-        deltaX = odometry_delta[0]*math.cos( -0.9483365985547553)
-        deltaY = odometry_delta[1]*math.sin( -0.9483365985547553)
-        deltaTheta = odometry_delta[2]
-        noise=np.random.normal(0, self.std_dev_motion, 3)
-        new_x = x + deltaX*(1+noise[0])
-        new_y = y + deltaY*(1+noise[1])
-        new_theta = (theta + deltaTheta*(1+noise[2])) % (2 * np.pi)
-         """
-        
-        """  #versao do alex q tá uma merda
-        deltaX = -odometry_delta[0]#*math.cos( -0.9483365985547553)
-        deltaY = -odometry_delta[1]#*math.sin( -0.9483365985547553)
-        deltaTheta = odometry_delta[2]
-        noise=np.random.normal(0, self.std_dev_motion, 3)
-        deltaX_noisy = deltaX * (1 + noise[0])
-        deltaY_noisy = deltaY * (1 + noise[1])
-        deltaTheta_noisy = deltaTheta * (1 + noise[2])
-
-        new_x = x + deltaX_noisy * math.cos(theta) - deltaY_noisy * math.sin(theta)
-        new_y = y + deltaX_noisy * math.sin(theta) + deltaY_noisy * math.cos(theta)
-        new_theta = (theta + deltaTheta_noisy) % (2 * np.pi)
-        """
-
-        # deltaX=odometry_delta[0]-x
-        # deltaY=odometry_delta[1]-y
-        # deltaTheta=odometry_delta[2]-theta
-        # noise=np.random.normal(0, self.std_dev_motion, 3)
-
-        # new_x = x + deltaX * (1 + noise[0])
-        # new_y = y + deltaY * (1 + noise[1])
-        # new_theta = (theta + deltaTheta * (1 + noise[2])) % (2 * np.pi)
-
-        
-        # #self.pose=np.array([new_x, new_y, new_theta])
-        # self.pose=np.array([odometry_delta[0],odometry_delta[1], odometry_delta[2]])
-        #noise=np.random.normal(0, self.std_dev_motion, 3)
-
+        self.trajectory.append((x,y,theta))
         delta_dist, delta_rot1, delta_rot2 = odometry_delta
 
         alpha1=0.0000015
@@ -182,5 +143,6 @@ class Particle:
     ##POSE##
     def get_pose(self):
         return (self.pose)
+
     
     
