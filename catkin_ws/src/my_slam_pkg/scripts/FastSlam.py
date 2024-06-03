@@ -162,11 +162,17 @@ class FastSlam:
     def get_best_trajectory(self):
         return self.particles[self.best_particle_ID].trajectory
     
-    def BestLandmarks(self):
-        slam_landmarks=np.empty(3,0)
+    def get_BestLandmarks(self):
+        first=True
         for landmark_id, landmark in self.particles[self.best_particle_ID].landmarks.items():
-            this_landmark=np.array([[landmark_id][landmark.mu]])
-            slam_landmarks = np.hstack((slam_landmarks, this_landmark))
+            if first:
+                first=False
+                slam_landmarks = np.array([int(landmark_id),float(landmark.mu[0][0]),float(landmark.mu[1][0])])
+            else:
+                this_landmark= np.array([int(landmark_id),float(landmark.mu[0][0]),float(landmark.mu[1][0])])
+             
+                slam_landmarks = np.vstack((slam_landmarks, this_landmark))
+        slam_landmarks=slam_landmarks.T
         sorted_indices = np.argsort(slam_landmarks[0,:])
         return slam_landmarks[:,sorted_indices] #sort array with the IDS
 

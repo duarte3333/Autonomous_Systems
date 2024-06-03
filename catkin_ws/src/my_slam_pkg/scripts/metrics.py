@@ -95,7 +95,7 @@ def SVD_rigidTransform(A,B):
     
     A_prime = A - centroid_A
     B_prime = B - centroid_B
-    
+   
     H = A_prime @ B_prime.T
     # Compute the SVD of H
     U, _, Vt = np.linalg.svd(H)
@@ -108,6 +108,7 @@ def SVD_rigidTransform(A,B):
     return Rot, t
 
 def applyRT(matrix, Rot, T):
+    print('rot', Rot)
     rotated_matrix = Rot @ matrix
     return rotated_matrix + T
 
@@ -115,7 +116,7 @@ def applyRT(matrix, Rot, T):
 def MSE(A,B):
     MSE_metric=0
     for i in range(A.shape[1]):
-        MSE_metric += (A[i,0]-B[i,0])**2 + (A[i,1]-B[i,1])**2
+        MSE_metric += (A[0,i]-B[0,i])**2 + (A[1,i]-B[1,i])**2
     return MSE_metric
 
 def show_metrics(ate_e, rpe_e, MSE_landmarks):
@@ -127,11 +128,12 @@ def show_metrics(ate_e, rpe_e, MSE_landmarks):
 
 
 def landmark_metrics(map_nr, slam):
-    slam_landmarks= slam.BestLandmarks()
+    slam_landmarks= slam.my_slam.get_BestLandmarks()
     landmarks_GroundTruth=landmarks_PoseMeasured(map_nr)
+
     Rot,T=SVD_rigidTransform(slam_landmarks[1:3,:],landmarks_GroundTruth[1:3,:])
-    slam_landmarks = applyRT(slam_landmarks, Rot, T)
-    MSE_metric = MSE(slam_landmarks[1:3,:],landmarks_GroundTruth[1:3,:])
+    slam_landmarks = applyRT(slam_landmarks[1:3,:], Rot, T)
+    MSE_metric = MSE(slam_landmarks,landmarks_GroundTruth)
     return MSE_metric
 
 def compute_metrics(slam,ground_truth, map_nr):

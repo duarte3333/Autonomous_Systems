@@ -32,10 +32,10 @@ class Particle:
         self.trajectory.append((x,y,theta))
         delta_dist, delta_rot1, delta_rot2 = odometry_delta
 
-        alpha1=0.0000015
-        alpha2=0.0000015
-        alpha3=0.0000015
-        alpha4=0.000001
+        alpha1=0.00008015
+        alpha2=0.00008015
+        alpha3=0.00008015
+        alpha4=0.0000801
         deviation_dist = math.sqrt(alpha1 * delta_rot1**2 + alpha2 * delta_dist**2)
         deviation_rot1 = math.sqrt(alpha3 * delta_dist**2 + alpha4 * delta_rot1**2 + alpha4 * delta_rot2**2)
         deviation_rot2 = math.sqrt(alpha1 * delta_rot2**2 + alpha2 * delta_dist**2)
