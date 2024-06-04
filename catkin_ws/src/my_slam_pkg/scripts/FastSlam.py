@@ -3,7 +3,7 @@ import math
 import numpy as np
 import copy
 from aux_slam import resample, normalize_angle
-from Particule import Particle
+from Particle import Particle
 import tf.transformations
 
 

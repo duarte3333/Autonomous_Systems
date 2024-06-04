@@ -3,6 +3,7 @@ import math
 
 from Landmark import Landmark
 from numpy import linalg #this is for the inverse of a matrix
+from aux_slam import normalize_angle
 
 class Particle:
     """ x: x position of the particle
@@ -22,36 +23,31 @@ class Particle:
         self.default_weight=1/nr_particles
         self.J_matrix = np.zeros((2,2))
         self.adjusted_covariance = np.zeros((2,2))
-        
+        self.trajectory = []
+            
     ##MOTION MODEL##
     def motion_model(self, odometry_delta):
         """ This function updates the particle's pose based on odometry (motion model) """
         x, y, theta = self.get_pose()
-        #odometry = np.random.normal(0, self.std_dev_motion, 2)
-        #print(self.old_odometry, ' after calling')
+        self.trajectory.append((x,y,theta))
+        delta_dist, delta_rot1, delta_rot2 = odometry_delta
 
-        #print('Odometry: ',odometry[0],', ',  odometry[1] ) 
-        #print('Odometry: ',self.old_odometry[0],', ',  self.old_odometry[1] , 'old') 
+        alpha1=0.00001015
+        alpha2=0.00001015
+        alpha3=0.00001015
+        alpha4=0.0000101
+        deviation_dist = math.sqrt(alpha1 * delta_rot1**2 + alpha2 * delta_dist**2)
+        deviation_rot1 = math.sqrt(alpha3 * delta_dist**2 + alpha4 * delta_rot1**2 + alpha4 * delta_rot2**2)
+        deviation_rot2 = math.sqrt(alpha1 * delta_rot2**2 + alpha2 * delta_dist**2)
 
-        #deltaRight=odometry[0]-self.old_odometry[0]
-        #deltaLeft=odometry[1]-self.old_odometry[1]
-        deltaLeft = odometry_delta[0]
-        deltaRight = odometry_delta[1]
-        #print('deltas: ',deltaRight,', ',  deltaLeft ) 
-      
-        deltaD =(deltaRight + deltaLeft)/2
-        delta_theta=-(deltaRight - deltaLeft)/self.turtlebot_L#aqui tinha um menos
-        delta_x=deltaD*math.cos(theta)
-        delta_y=-deltaD*math.sin(theta)
-        noise=np.random.normal(0, self.std_dev_motion, 3)
-        new_x = x + delta_x*(1+noise[0])
-        new_y = y + delta_y*(1+noise[1])
-        new_theta = (theta + delta_theta*(1+noise[2])) % (2 * np.pi)
-        #print("Particle pose delta x, y",delta_x*(1+noise[0]),delta_y*(1+noise[1]) )
-        #print('Odometry: ',deltaRight,', ',  deltaLeft ) 
-        self.pose=np.array([new_x, new_y, new_theta])
-
-        #self.old_odometry=odometry.copy()
+        delta_dist -= np.random.normal(0,deviation_dist)
+        delta_rot1 -= np.random.normal(0,deviation_rot1)
+        delta_rot2 -= np.random.normal(0,deviation_rot2)
+        
+        new_x = x + delta_dist*math.cos(theta+delta_rot1)
+        new_y = y - delta_dist*math.sin(theta+delta_rot1)
+        new_theta = normalize_angle(theta + delta_rot1+delta_rot2)
+        self.pose=np.array([new_x,new_y, new_theta])
 
     ##WEIGHT##
     def handle_landmark(self, landmark_dist, landmark_bearing_angle, landmark_id):
@@ -120,7 +116,7 @@ class Particle:
                           [dy / q, -dx / q, -1]])
             
             # Measurement noise covariance matrix (should be tuned)
-            Q = np.diag([0.1, 0.1])  # Example values
+            Q = np.diag([0.2, 0.7])  # Example values
 
             # Calculate the Kalman Gain
             S = J @ landmark.sigma @ J.T + Q  # Measurement prediction covariance
@@ -147,5 +143,6 @@ class Particle:
     ##POSE##
     def get_pose(self):
         return (self.pose)
+
     
     

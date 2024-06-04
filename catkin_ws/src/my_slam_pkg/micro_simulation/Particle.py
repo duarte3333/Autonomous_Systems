@@ -1,9 +1,8 @@
 import numpy as np
 import math
-
+from aux_slam import resample, normalize_angle
 from Landmark import Landmark
 from numpy import linalg #this is for the inverse of a matrix
-from aux_slam import normalize_angle
 
 class Particle:
     """ x: x position of the particle
@@ -12,7 +11,7 @@ class Particle:
         landmarks: list of landmarks in the map
         weight: weight of the particle"""
         
-    def __init__(self, pose,nr_particles,turtlebot_L,std_dev_motion=0.2 ,is_turtlebot=False):
+    def __init__(self, pose,nr_particles,turtlebot_L,motion_model_type,std_dev_motion=0.2 ,is_turtlebot=False):
         self.pose = pose
         self.is_turtlebot = is_turtlebot
         self.landmarks = {}
@@ -23,31 +22,53 @@ class Particle:
         self.default_weight=1/nr_particles
         self.J_matrix = np.zeros((2,2))
         self.adjusted_covariance = np.zeros((2,2))
-        self.trajectory = []
-            
+        self.motion_model_type=motion_model_type
+        
     ##MOTION MODEL##
     def motion_model(self, odometry_delta):
         """ This function updates the particle's pose based on odometry (motion model) """
         x, y, theta = self.get_pose()
-        self.trajectory.append((x,y,theta))
-        delta_dist, delta_rot1, delta_rot2 = odometry_delta
+     
 
-        alpha1=0.00008015
-        alpha2=0.00008015
-        alpha3=0.00008015
-        alpha4=0.0000801
-        deviation_dist = math.sqrt(alpha1 * delta_rot1**2 + alpha2 * delta_dist**2)
-        deviation_rot1 = math.sqrt(alpha3 * delta_dist**2 + alpha4 * delta_rot1**2 + alpha4 * delta_rot2**2)
-        deviation_rot2 = math.sqrt(alpha1 * delta_rot2**2 + alpha2 * delta_dist**2)
+        deltaLeft = odometry_delta[0]
+        deltaRight = odometry_delta[1]
+      
+        deltaD =(deltaRight + deltaLeft)/2
+        delta_theta=-(deltaRight - deltaLeft)/self.turtlebot_L#aqui tinha um menos
+        delta_x=deltaD*math.cos(theta)
+        delta_y=-deltaD*math.sin(theta)
 
-        delta_dist -= np.random.normal(0,deviation_dist)
-        delta_rot1 -= np.random.normal(0,deviation_rot1)
-        delta_rot2 -= np.random.normal(0,deviation_rot2)
         
-        new_x = x + delta_dist*math.cos(theta+delta_rot1)
-        new_y = y - delta_dist*math.sin(theta+delta_rot1)
-        new_theta = normalize_angle(theta + delta_rot1+delta_rot2)
-        self.pose=np.array([new_x,new_y, new_theta])
+        
+
+        if self.motion_model_type=='original_motion':
+                
+            noise=np.random.normal(0, self.std_dev_motion, 3)
+            new_x = x + delta_x*(1+noise[0])
+            new_y = y + delta_y*(1+noise[1])
+            new_theta = (theta + delta_theta*(1+noise[2])) % (2 * np.pi)
+            self.pose=np.array([new_x, new_y, new_theta])
+        else:
+            delta_dist = math.sqrt((delta_x)**2+(delta_y)**2)
+            delta_rot1 = normalize_angle(math.atan2(delta_y,delta_x)- theta)
+            delta_rot2 = normalize_angle(delta_theta- delta_rot1)
+
+            alpha1=0.00001015
+            alpha2=0.00001015
+            alpha3=0.00001015
+            alpha4=0.0000101
+            deviation_dist = math.sqrt(alpha1 * delta_rot1**2 + alpha2 * delta_dist**2)
+            deviation_rot1 = math.sqrt(alpha3 * delta_dist**2 + alpha4 * delta_rot1**2 + alpha4 * delta_rot2**2)
+            deviation_rot2 = math.sqrt(alpha1 * delta_rot2**2 + alpha2 * delta_dist**2)
+
+            delta_dist -= np.random.normal(0,deviation_dist)
+            delta_rot1 -= np.random.normal(0,deviation_rot1)
+            delta_rot2 -= np.random.normal(0,deviation_rot2)
+            
+            new_x = x + delta_dist*math.cos(theta+delta_rot1)
+            new_y = y - delta_dist*math.sin(theta+delta_rot1)
+            new_theta = normalize_angle(theta + delta_rot1+delta_rot2)
+            self.pose=np.array([new_x,new_y, new_theta])
 
     ##WEIGHT##
     def handle_landmark(self, landmark_dist, landmark_bearing_angle, landmark_id):
@@ -116,7 +137,7 @@ class Particle:
                           [dy / q, -dx / q, -1]])
             
             # Measurement noise covariance matrix (should be tuned)
-            Q = np.diag([0.2, 0.7])  # Example values
+            Q = np.diag([0.1, 0.1])  # Example values
 
             # Calculate the Kalman Gain
             S = J @ landmark.sigma @ J.T + Q  # Measurement prediction covariance
@@ -143,6 +164,5 @@ class Particle:
     ##POSE##
     def get_pose(self):
         return (self.pose)
-
     
     

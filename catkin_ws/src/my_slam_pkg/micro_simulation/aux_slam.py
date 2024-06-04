@@ -3,7 +3,14 @@ import math
 import random
 from scipy import linalg
 import copy
-from Particule import Particle
+
+
+def normalize_angle(angle):
+    while angle > math.pi:
+        angle -= 2.0 * math.pi
+    while angle < -math.pi:
+        angle += 2.0 * math.pi
+    return angle
 
 def normalize_weights(particles, num_particles):
     sumw = sum([p.weight for p in particles])

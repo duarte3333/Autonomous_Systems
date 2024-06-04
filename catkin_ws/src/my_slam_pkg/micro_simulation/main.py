@@ -29,10 +29,11 @@ def init_variables():
     nr_landmarks =5# int(input('How many random arucu landmarks do you want in your map?'))
     central_bar_width=10
     number_particles=30
+    motion_model_type='original_motion' #or original_motion
 
     landmarks = create_landmarks(nr_landmarks,size_m,size_m)
     sim=Simulation(only_slam_window,size_m, size_m,window_size_pixel, Odometry_noise,landmark_noise, sample_rate, central_bar_width)
-    my_slam = FastSlam(only_slam_window,window_size_pixel, sample_rate, size_m, central_bar_width,sim.turtlebot.wheel_base , number_particles)#, sim.get_screen())
+    my_slam = FastSlam(only_slam_window,window_size_pixel, sample_rate, size_m, central_bar_width,sim.turtlebot.wheel_base ,motion_model_type, number_particles, sim.get_screen())
     return landmarks,sim, my_slam
 
 def run_simulation_main():
