@@ -2,6 +2,7 @@
 import rospy
 import subprocess
 import argparse
+import os
 import cv2
 import cv2.aruco as aruco
 import numpy as np
@@ -110,6 +111,10 @@ def run_slam(rosbag_file):
                 rosbag_process = subprocess.Popen(['roslaunch', 'turtlebot3_teleop', 'turtlebot3_teleop_key.launch'])
             else:
                 rosbag_process = subprocess.Popen(['rosbag', 'play', rosbag_file])
+                if not os.path.isfile(rosbag_file):
+                    print(f"ERROR: The file {rosbag_file} does not exist.")
+                    exit(1)
+                
             rosbag_time = get_rosbag_duration(rosbag_file)
             slam = ArucoSLAM(rosbag_time)
             gt = 0 
