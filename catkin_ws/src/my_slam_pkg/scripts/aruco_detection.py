@@ -10,6 +10,7 @@ from sensor_msgs.msg import CompressedImage
 from nav_msgs.msg import Odometry
 from cv_bridge import CvBridge
 from FastSlam import FastSlam
+import re
 from metrics import compute_metrics
 from odom_callback import odom_callback
 from img_callback import image_callback
@@ -98,7 +99,7 @@ class ArucoSLAM:
     def get_trajectory(self):
         return self.my_slam.get_best_trajectory()
 
-def run_slam(rosbag_file):
+def run_slam(rosbag_file, nr_map):
     rosbag_process = None
     if (rosbag_file == 'microsim'):
         rosbag_process = subprocess.Popen(['python3', '../micro_simulation/main.py'])
@@ -114,9 +115,9 @@ def run_slam(rosbag_file):
             slam = ArucoSLAM(rosbag_time)
             gt = 0 
             slam.run()
-            # ate, rpe, mse_landmarks = compute_metrics(slam, gt, rosbag_nr)
-            # print(f"Metrics for {rosbag_file}:")
-            # print(f"ATE: {ate}, RPE: {rpe}, MSE Landmarks: {mse_landmarks}")
+            ate, rpe, mse_landmarks = compute_metrics(slam, gt, nr_map)
+            print(f"Metrics for {rosbag_file}:")
+            print(f"ATE: {ate}, RPE: {rpe}, MSE Landmarks: {mse_landmarks}")
         finally:
             if rosbag_process:
                 rosbag_process.terminate()
@@ -125,9 +126,17 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Select a rosbag to run.")
     parser.add_argument('rosbag', help="The rosbag file to run.")
     args = parser.parse_args()
+    nr_map=None
     if args.rosbag.endswith('.bag'):
         print("entrei", args.rosbag)
         rosbag_file = f"../rosbag/{args.rosbag}"
+        m = re.search(r"\d", args.rosbag) #this searches for the first digit of the name
+        nr_map=int(m.start())
+        if m:
+            print("Map found:", nr_map)
+        else:
+            print("No map found")
+
     elif args.rosbag == 'live':
         rosbag_file = 'live'
     elif args.rosbag == 'microsim':
@@ -135,7 +144,7 @@ if __name__ == '__main__':
     else:
         print("Invalid choice. Exiting.")
         exit(1)
-    run_slam(rosbag_file)
+    run_slam(rosbag_file, nr_map)
 
     
     

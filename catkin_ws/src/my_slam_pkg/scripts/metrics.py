@@ -89,6 +89,7 @@ def landmarks_PoseMeasured(map_nr):
 
     return np.stack((IDS,x,y))
 
+
 def SVD_rigidTransform(A,B):
     centroid_A = np.mean(A, axis=1).reshape(2, 1)
     centroid_B = np.mean(B, axis=1).reshape(2, 1)
@@ -116,9 +117,38 @@ def applyRT(matrix, Rot, T):
 def MSE(A,B):
     MSE_metric=0
     for i in range(A.shape[1]):
+        print('A ', A[0,i], A[1,i])
+        print('B ', B[0,i], B[1,i])
+        print('dist: ', (A[0,i]-B[0,i])**2 + (A[1,i]-B[1,i])**2)
         MSE_metric += (A[0,i]-B[0,i])**2 + (A[1,i]-B[1,i])**2
+
     return MSE_metric
 
+def remove_columns(A_to_remove,B):
+    to_remove=[]
+    for i in range(A_to_remove.shape[1]):
+        flag=False
+        for j in range(B.shape[1]):
+            if B[0,j]==A_to_remove[0,i]:
+                flag=True
+        if flag==False:
+            to_remove.append(i)
+    A_new= np.delete(A_to_remove,to_remove,1)
+    return A_new
+
+def check_arraySize(A,B):
+    if A.shape[1] >B.shape[1]:
+        A_new = remove_columns(A,B)
+        B_new=B
+
+    elif A.shape[1] <B.shape[1]:
+        B_new = remove_columns(B,A)
+        A_new=A
+    else:
+        A_new=A
+        B_new=B
+
+    return A_new, B_new
 def show_metrics(ate_e, rpe_e, MSE_landmarks):
     print('Metrics:\n')
     print('ATE: ', ate_e)
@@ -130,18 +160,19 @@ def show_metrics(ate_e, rpe_e, MSE_landmarks):
 def landmark_metrics(map_nr, slam):
     slam_landmarks= slam.my_slam.get_BestLandmarks()
     landmarks_GroundTruth=landmarks_PoseMeasured(map_nr)
-
+    slam_landmarks , landmarks_GroundTruth = check_arraySize(slam_landmarks , landmarks_GroundTruth)
+   
     Rot,T=SVD_rigidTransform(slam_landmarks[1:3,:],landmarks_GroundTruth[1:3,:])
     slam_landmarks = applyRT(slam_landmarks[1:3,:], Rot, T)
-    MSE_metric = MSE(slam_landmarks,landmarks_GroundTruth)
+
+    MSE_metric = MSE(slam_landmarks,landmarks_GroundTruth[1:3,:])
     return MSE_metric
 
 def compute_metrics(slam,ground_truth, map_nr):
-    trajectory = slam.get_trajectory()
-    trajectory = np.array(trajectory)
-    ate_e = ate(ground_truth, trajectory)
-    rpe_e = rpe(ground_truth,trajectory)
-
+    #trajectory = slam.get_trajectory()
+    #trajectory = np.array(trajectory)
+    ate_e =0# ate(ground_truth, trajectory)
+    rpe_e = 0#rpe(ground_truth,trajectory)
     MSE_landmarks = landmark_metrics(map_nr, slam)
-    show_metrics(ate_e, rpe_e, MSE_landmarks)
+    #show_metrics(ate_e, rpe_e, MSE_landmarks)
     return ate_e, rpe_e, MSE_landmarks
