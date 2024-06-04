@@ -1,4 +1,4 @@
-prefix=/home/alexandre/Documents/Git_Saut/Autonomous_Systems/catkin_ws/devel
+prefix=/home/duarte/Documents/AS_project/catkin_ws/devel
 
 Name: my_slam_pkg
 Description: Description of my_slam_pkg

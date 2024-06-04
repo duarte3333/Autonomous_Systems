@@ -1,8 +1,8 @@
-# Install script for directory: /home/alexandre/Documents/Git_Saut/Autonomous_Systems/catkin_ws/src/my_turtle_package
+# Install script for directory: /home/duarte/Documents/AS_project/catkin_ws/src/my_turtle_package
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/home/alexandre/Documents/Git_Saut/Autonomous_Systems/catkin_ws/install")
+  set(CMAKE_INSTALL_PREFIX "/home/duarte/Documents/AS_project/catkin_ws/install")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -38,17 +38,17 @@ if(NOT DEFINED CMAKE_CROSSCOMPILING)
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" TYPE FILE FILES "/home/alexandre/Documents/Git_Saut/Autonomous_Systems/catkin_ws/build/my_turtle_package/catkin_generated/installspace/my_turtle_package.pc")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" TYPE FILE FILES "/home/duarte/Documents/AS_project/catkin_ws/build/my_turtle_package/catkin_generated/installspace/my_turtle_package.pc")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/my_turtle_package/cmake" TYPE FILE FILES
-    "/home/alexandre/Documents/Git_Saut/Autonomous_Systems/catkin_ws/build/my_turtle_package/catkin_generated/installspace/my_turtle_packageConfig.cmake"
-    "/home/alexandre/Documents/Git_Saut/Autonomous_Systems/catkin_ws/build/my_turtle_package/catkin_generated/installspace/my_turtle_packageConfig-version.cmake"
+    "/home/duarte/Documents/AS_project/catkin_ws/build/my_turtle_package/catkin_generated/installspace/my_turtle_packageConfig.cmake"
+    "/home/duarte/Documents/AS_project/catkin_ws/build/my_turtle_package/catkin_generated/installspace/my_turtle_packageConfig-version.cmake"
     )
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/my_turtle_package" TYPE FILE FILES "/home/alexandre/Documents/Git_Saut/Autonomous_Systems/catkin_ws/src/my_turtle_package/package.xml")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/my_turtle_package" TYPE FILE FILES "/home/duarte/Documents/AS_project/catkin_ws/src/my_turtle_package/package.xml")
 endif()
 

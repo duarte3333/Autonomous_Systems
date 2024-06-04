@@ -22,7 +22,7 @@ def init_variables():
     #Main parameters:
     Odometry_noise= True  #Gausian noise na odometria
     landmark_noise=True
-    only_slam_window=True
+    only_slam_window=False
     window_size_pixel=1000    #tamanho da janela
     sample_rate=100  #sample rate (Hz)
     size_m = 3#float(input('What should be the size of the map? n x n (in meters). n is: '))
@@ -49,7 +49,6 @@ def run_simulation_main():
             my_slam.compute_slam(sim.get_odometry(),sim.get_Landmarks_in_sight(landmarks, "Relative_pose") )
             count=0
         clock.tick(1/sim.time_interval)
-
     pygame.display.quit()
     pygame.quit()
     

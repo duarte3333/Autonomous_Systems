@@ -16,7 +16,6 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   geometry_msgs
   nav_msgs
-  aruco_ros
 )
 
 ## System dependencies are found with CMake's conventions

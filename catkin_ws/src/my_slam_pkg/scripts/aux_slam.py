@@ -3,6 +3,51 @@ import math
 import random
 from scipy import linalg
 import copy
+import subprocess
+import cv2
+
+def cart2pol(x, y):
+    rho = np.sqrt(x**2 + y**2)
+    phi = np.arctan2(y, x)
+    return(rho, phi)
+
+def compute_marker_size_in_pixels(marker_corners):
+    _, _, w, h = cv2.boundingRect(marker_corners)
+    marker_size_pixels = max(w, h)
+    return marker_size_pixels
+
+def cart2pol(x, y):
+    rho = np.sqrt(x**2 + y**2)
+    phi = np.arctan2(y, x)
+    return(rho, phi)
+
+def calculate_distance(marker_size_pixels, focal_length):
+    distance = (0.25 * focal_length) / marker_size_pixels
+    return distance
+
+def get_rosbag_duration(rosbag_file):
+    # Use rosbag info command to get the duration of the rosbag
+    result = subprocess.run(['rosbag', 'info', '--yaml', rosbag_file], stdout=subprocess.PIPE)
+    output = result.stdout.decode('utf-8')
+    print("Rosbag info output:", output)  # Debugging line to see the output format
+    for line in output.split('\n'):
+        if 'duration' in line:
+            duration_str = line.split(': ')[1].strip()
+            if 'sec' in duration_str:
+                duration = float(duration_str.split(' ')[0])
+            else:
+                parts = duration_str.split(':')
+                duration = 0
+                if len(parts) == 3:
+                    hours, minutes, seconds = map(float, parts)
+                    duration = hours * 3600 + minutes * 60 + seconds
+                elif len(parts) == 2:
+                    minutes, seconds = map(float, parts)
+                    duration = minutes * 60 + seconds
+                elif len(parts) == 1:
+                    duration = float(parts[0])
+            return int(duration)
+    return 0
 
 def normalize_weights(particles, num_particles):
     sumw = sum([p.weight for p in particles])
