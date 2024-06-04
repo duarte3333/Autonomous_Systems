@@ -53,10 +53,10 @@ class Particle:
             delta_rot1 = normalize_angle(math.atan2(delta_y,delta_x)- theta)
             delta_rot2 = normalize_angle(delta_theta- delta_rot1)
 
-            alpha1=0.00001015
-            alpha2=0.00001015
-            alpha3=0.00001015
-            alpha4=0.0000101
+            alpha1=0.000005
+            alpha2=0.000005
+            alpha3=0.000005
+            alpha4=0.000005
             deviation_dist = math.sqrt(alpha1 * delta_rot1**2 + alpha2 * delta_dist**2)
             deviation_rot1 = math.sqrt(alpha3 * delta_dist**2 + alpha4 * delta_rot1**2 + alpha4 * delta_rot2**2)
             deviation_rot2 = math.sqrt(alpha1 * delta_rot2**2 + alpha2 * delta_dist**2)
@@ -66,7 +66,7 @@ class Particle:
             delta_rot2 -= np.random.normal(0,deviation_rot2)
             
             new_x = x + delta_dist*math.cos(theta+delta_rot1)
-            new_y = y - delta_dist*math.sin(theta+delta_rot1)
+            new_y = y + delta_dist*math.sin(theta+delta_rot1)
             new_theta = normalize_angle(theta + delta_rot1+delta_rot2)
             self.pose=np.array([new_x,new_y, new_theta])
 

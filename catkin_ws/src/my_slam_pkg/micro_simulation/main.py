@@ -29,7 +29,7 @@ def init_variables():
     nr_landmarks =5# int(input('How many random arucu landmarks do you want in your map?'))
     central_bar_width=10
     number_particles=30
-    motion_model_type='original_motion' #or original_motion
+    motion_model_type='new' #or original_motion
 
     landmarks = create_landmarks(nr_landmarks,size_m,size_m)
     sim=Simulation(only_slam_window,size_m, size_m,window_size_pixel, Odometry_noise,landmark_noise, sample_rate, central_bar_width)

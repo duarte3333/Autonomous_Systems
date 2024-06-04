@@ -12,6 +12,7 @@ from nav_msgs.msg import Odometry
 from cv_bridge import CvBridge
 from FastSlam import FastSlam
 import re
+import pygame
 from metrics import compute_metrics
 from odom_callback import odom_callback
 from img_callback import image_callback
@@ -87,6 +88,8 @@ class ArucoSLAM:
                 break  # Exit the loop
             rospy.sleep(0.1) # Process ROS callbacks once
         cv2.destroyAllWindows()  # Close OpenCV windows when node exits
+        pygame.display.quit()
+        pygame.quit()
     
     def rosbag_finished(self, start_time, duration):
         # Calculate the expected end time based on the start time and duration of rosbag playback
