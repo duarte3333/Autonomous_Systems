@@ -14,13 +14,16 @@ class OcupancyGridMap:
         self.resolution = resolution #meters of each cell
 
         self.frame_id = frame_id
-        print('map res: ', self.width, self.height, self.resolution)
         # Initialize the occupancy grid with log-odds of zero (equiv. to 0.5 probability)
         self.grid = np.zeros((self.height, self.width), dtype=np.float32)
-        print('shape:', self.grid.shape)
         # Parameters for the inverse sensor model
         self.l_occ = np.log(0.7 / 0.3)   # Log-odds for occupied
         self.l_free = np.log(0.3 / 0.7)  # Log-odds for free
+        
+        self.l_occ = np.log(9)  # Log odds for occupied
+        self.l_free = np.log(1/9)  # Log odds for free
+        
+
         self.l0 = 0                      # Log-odds for unknown (0.5 probability)
 
         
@@ -64,7 +67,7 @@ class OcupancyGridMap:
         sy = 1 if y0 < y1 else -1
         err = dx - dy
 
-        while True:
+        while True: 
             self.grid[y0, x0] += self.l_free  # Update free cells
             if x0 == x1 and y0 == y1:
                 break
@@ -80,8 +83,8 @@ class OcupancyGridMap:
 
         # Update the endpoint (occupied cell)
         if 0 <= x1 < self.width and 0 <= y1 < self.height:
-            if distance < np.inf:  # Only update if within max sensor range
-                self.grid[y1, x1] += self.l_occ
+              # Only update if within max sensor range
+            self.grid[y1, x1] += self.l_occ
 
 
 #self.grid[y0, x0] += self.l_free  # Update free cells

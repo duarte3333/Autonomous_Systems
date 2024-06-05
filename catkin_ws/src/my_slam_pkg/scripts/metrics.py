@@ -82,11 +82,17 @@ def landmarks_PoseMeasured(map_nr):
     elif map_nr==2:
         x=np.array([-0.9,-0.6,-1.15,-0.15,0])
         y=np.array([3.6,-1.3,-0.66,3.9,0])
+    elif map_nr==3:
+        x=np.array([0,2.27,1,3.29,3.8])
+        y=np.array([0,0.82,1.96,-0.74,0])
+    elif map_nr==4:
+        x=np.array([0.65,0.64,2.74,0,2.74])
+        y=np.array([5.5,-0.05,1.41,0.78,0.31])
     else:
-        print('Not a valid map nr (must be either 1 or 2)')
-        return None 
+        print('Not a valid map nr (must be either 1, 2,3,4). MSE is going to be not valid')
+        x=np.array([0,0,0,0,0])
+        y=np.array([0,0,0,0,0])
     IDS=np.array([15, 53,60,77,100])
-
     return np.stack((IDS,x,y))
 
 

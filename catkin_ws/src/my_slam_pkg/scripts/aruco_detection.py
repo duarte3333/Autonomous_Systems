@@ -40,6 +40,9 @@ class ArucoSLAM:
         
         rospy.loginfo('ArucoSLAM Node Started')
         rospy.init_node('aruco_slam') # Initialize the ROS node
+        Occu_grid_pub = rospy.Publisher('/occupancy_grid', OccupancyGrid, queue_size=10)
+        self.create_slam(Occu_grid_pub)
+
         #subscribe node
         self.image_sub = rospy.Subscriber("/raspicam_node/image/compressed", CompressedImage, self.image_callback_wrapper)
         self.current_aruco = []  
@@ -50,9 +53,7 @@ class ArucoSLAM:
 
         rospy.Subscriber('/scan', LaserScan, self.lidar_callback_wrapper)
 
-        Occu_grid_pub = rospy.Publisher('/occupancy_grid', OccupancyGrid, queue_size=10)
-        self.create_slam(Occu_grid_pub)
-
+        
         try: #The tag of our aruco dictionary is 4X4_100
             self.aruco_dict = aruco.Dictionary_get(aruco.DICT_5X5_250)
             print(self.aruco_dict)
@@ -72,10 +73,10 @@ class ArucoSLAM:
     def create_slam(self,Occu_grid_pub):
         window_size_pixel=900    #tamanho da janela
         sample_rate=5  #sample rate (Hz)
-        size_m = 5#float(input('What should be the size of the map? n x n (in meters). n is: '))
+        size_m = 10#float(input('What should be the size of the map? n x n (in meters). n is: '))
         central_bar_width=10
         turtlebot_L=0.287
-        OG_map_options=(10,10,0.1) #width meters, height meters, resolution meters per cell
+        OG_map_options=(20,20,0.1) #width meters, height meters, resolution meters per cell
         number_particles=1
         self.my_slam = FastSlam(True, window_size_pixel, sample_rate, size_m, central_bar_width,OG_map_options,Occu_grid_pub, turtlebot_L,number_particles)
         self.count = 0
@@ -161,8 +162,6 @@ if __name__ == '__main__':
             print("Map found:", nr_map)
         else:
             print("No map found")
-
-
     elif args.rosbag == 'live':
         rosbag_file = 'live'
     elif args.rosbag == 'microsim':
