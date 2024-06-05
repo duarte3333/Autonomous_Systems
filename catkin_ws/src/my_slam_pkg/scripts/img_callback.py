@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import cv2.aruco as aruco
 import cv2 as CvBridgeError
+from aux_slam import cart2pol
 
 def transform_camera_to_robot(translation_vector):
     R_cam_to_robot = np.array([
@@ -65,8 +66,7 @@ def image_callback(self, data):
                 cv2.circle(cv_image, (320,240), radius=10, color=(255, 0, 0), thickness=-1)
 
                 tvec = transform_camera_to_robot(tvec[0][0])
-                phi = compute_bearing_angle(tvec)
-                dist = tvec[2]
+                dist,phi = cart2pol(tvec[0],tvec[2])
 
                 # Fill the dictionary if the marker is detected
                 if ids[i][0] not in self.dict:
