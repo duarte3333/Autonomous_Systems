@@ -8,7 +8,7 @@ import tf.transformations
 
 
 class FastSlam:
-    def __init__(self,only_slam_window, window_size_pixel, sample_rate, size_m,central_bar_width, turtlebot_L,num_particles=50 , screen=None, resample_method="low variance",std_dev_motion = 0.5):
+    def __init__(self,only_slam_window, window_size_pixel, sample_rate, size_m,central_bar_width,OG_mapoptions,Occu_grid_pub, turtlebot_L,num_particles=50 , screen=None, resample_method="low variance",std_dev_motion = 0.5):
         
         self.SCREEN_WIDTH = window_size_pixel
         self.SCREEN_HEIGHT = window_size_pixel
@@ -51,13 +51,12 @@ class FastSlam:
         self.old_odometry = [0.0,0.0]
         self.old_yaw = 0
         self.num_particles = num_particles
-        self.particles = self.initialize_particles()
         self.best_particle_ID=-1
-
+        self.OG_mapoptions = OG_mapoptions
+        self.Occu_grid_pub=Occu_grid_pub
+        self.particles = self.initialize_particles()
         self.update_screen()
-
         #initialize FastSlam variables
-
         return
     
     def initialize_particles(self, landmarks={}):
@@ -68,9 +67,16 @@ class FastSlam:
             y = 0#np.random.uniform(0, self.height_meters)
             theta = 0#np.random.uniform(0, 2 * np.pi)
             pose = np.array([x, y, theta])
-            particles.append(Particle(pose,self.num_particles, self.turtlebot_L,self.std_dev_motion ))
+            particles.append(Particle(pose,self.num_particles, self.turtlebot_L,self.OG_mapoptions,self.std_dev_motion ))
 
         return particles
+    
+    def update_laser_scan(self,scan_msg):
+        for particle in self.particles:
+            particle.updateMap(scan_msg)
+        
+        best_particle = self.particles[self.best_particle_ID]
+        best_particle.OG_map.publish_grid(self.Occu_grid_pub)
 
     def update_odometry(self,odometry):
         

@@ -17,3 +17,7 @@ def odom_callback(self, odom_data):
         self.odom[0] -= self.tara[0]
         self.odom[1] -= self.tara[1]
         self.my_slam.update_odometry(self.odom)
+
+def lidar_callback(self, laser_scan):
+    with self.lock:
+        self.my_slam.update_laser_scan(laser_scan)

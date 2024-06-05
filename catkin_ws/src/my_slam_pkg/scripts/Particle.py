@@ -4,6 +4,7 @@ import math
 from Landmark import Landmark
 from numpy import linalg #this is for the inverse of a matrix
 from aux_slam import normalize_angle
+from OcupancyGridMap import OcupancyGridMap
 
 class Particle:
     """ x: x position of the particle
@@ -12,7 +13,7 @@ class Particle:
         landmarks: list of landmarks in the map
         weight: weight of the particle"""
         
-    def __init__(self, pose,nr_particles,turtlebot_L,std_dev_motion=0.2 ,is_turtlebot=False):
+    def __init__(self, pose,nr_particles,turtlebot_L,map_options,std_dev_motion=0.2 ,is_turtlebot=False):
         self.pose = pose
         self.is_turtlebot = is_turtlebot
         self.landmarks = {}
@@ -24,7 +25,9 @@ class Particle:
         self.J_matrix = np.zeros((2,2))
         self.adjusted_covariance = np.zeros((2,2))
         self.trajectory = []
-            
+        self.OG_map = OcupancyGridMap(map_options[0], map_options[1], map_options[2])#width, height and resolution
+
+
     ##MOTION MODEL##
     def motion_model(self, odometry_delta):
         """ This function updates the particle's pose based on odometry (motion model) """
@@ -139,7 +142,9 @@ class Particle:
                 weight_factor = 1 / np.sqrt(2 * np.pi * det_S)
                 exponent = -0.5 * innovation.T @ np.linalg.inv(S) @ innovation
                 self.weight *= weight_factor * np.exp(exponent)
-    
+    def updateMap(self, scan_msg):
+        self.OG_map.update(self.pose, scan_msg)  # Update the occupancy grid map with the current laser scan and the robot pose
+
     ##POSE##
     def get_pose(self):
         return (self.pose)
