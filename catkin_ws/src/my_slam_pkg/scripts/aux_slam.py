@@ -8,8 +8,8 @@ import cv2
 
 def cart2pol(x, y):
     rho = np.sqrt(x**2 + y**2)
-    phi = np.arctan2(y, x)
-    return(rho, phi)
+    phi = np.arctan2(x, y)
+    return(rho, np.degrees(phi))
 
 def compute_marker_size_in_pixels(marker_corners):
     _, _, w, h = cv2.boundingRect(marker_corners)
