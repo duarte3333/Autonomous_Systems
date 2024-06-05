@@ -1,0 +1,11 @@
+<launch>
+    <!-- Start roscore -->
+    <!-- <node pkg="roslaunch" type="roscore" name="roscore" output="screen" /> -->
+
+    <!-- Launch the TurtleBot3 Gazebo with RViz -->
+    <!-- <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_gazebo_rviz.launch" /> -->
+
+    <!-- Run the aruco_detection.py script with rosbag argument -->
+    <arg name="rosbag" default="default.bag" />
+    <node pkg="my_slam_pkg" type="aruco_detection.py" name="aruco_detection" output="screen" args="$(arg rosbag)" />
+</launch>

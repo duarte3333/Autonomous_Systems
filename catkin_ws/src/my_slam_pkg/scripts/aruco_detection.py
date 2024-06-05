@@ -7,6 +7,8 @@ import cv2
 import cv2.aruco as aruco
 import numpy as np
 import threading
+import tf
+from geometry_msgs.msg import TransformStamped
 from sensor_msgs.msg import CompressedImage
 from nav_msgs.msg import Odometry
 from cv_bridge import CvBridge
@@ -15,6 +17,8 @@ from metrics import compute_metrics
 from odom_callback import odom_callback
 from img_callback import image_callback
 from aux_slam import get_rosbag_duration, cart2pol
+from visualization_msgs.msg import Marker, MarkerArray
+
 
 class ArucoSLAM:
     def odom_callback_wrapper(self, data):
@@ -27,6 +31,7 @@ class ArucoSLAM:
         self.image_callback = image_callback
         self.odom_callback = odom_callback
         self.k = rosbag_time + 5
+        self.tf_broadcaster = tf.TransformBroadcaster()
         self.calibrate_camera()
         self.lock = threading.Lock()
         self.create_slam()
@@ -34,9 +39,9 @@ class ArucoSLAM:
         rospy.init_node('aruco_slam') # Initialize the ROS node
         #subscribe node
         self.image_sub = rospy.Subscriber("/raspicam_node/image/compressed", CompressedImage, self.image_callback_wrapper)
-        self.current_aruco = []  
-
         self.odom_sub = rospy.Subscriber("/odom", Odometry, self.odom_callback_wrapper)
+        self.landmark_pub = rospy.Publisher('/landmarks', MarkerArray, queue_size=10)
+        self.current_aruco = []  
         self.odom =[0,0,0]
         self.bridge = CvBridge() # Initialize the CvBridge object
 
@@ -54,9 +59,31 @@ class ArucoSLAM:
             self.parameters =  cv2.aruco.DetectorParameters()
         self.dict = {}
         self.map = {}
+        
+    def publish_tf(self):
+            # Broadcast map to odom
+            br = tf.TransformBroadcaster()
+            br.sendTransform(
+                (0.0, 0.0, 0.0),
+                tf.transformations.quaternion_from_euler(0, 0, 0),
+                rospy.Time.now(),
+                "odom",
+                "map"
+            )
 
+            # Get best particle and broadcast odom to base_link
+            best_particle = self.my_slam.get_best_particle()
+            x, y, theta = best_particle.pose  # Access the pose property correctly
+            quaternion = tf.transformations.quaternion_from_euler(0, 0, theta)
+            br.sendTransform(
+                (x, y, 0),
+                quaternion,
+                rospy.Time.now(),
+                "base_link",
+                "odom"
+            )
     def create_slam(self):
-        window_size_pixel=900    #tamanho da janela
+        window_size_pixel=900    #tamanho da janela 
         sample_rate=5  #sample rate (Hz)
         size_m = 5#float(input('What should be the size of the map? n x n (in meters). n is: '))
         central_bar_width=10
@@ -80,6 +107,8 @@ class ArucoSLAM:
         start_time = rospy.Time.now() 
         while not rospy.is_shutdown():  # Continue running until ROS node is shutdown
             # Check if the rosbag playback has finished
+            self.publish_tf()
+            self.my_slam.publish_landmarks()
             if self.rosbag_finished(start_time, self.k):  # Implement this function to check if the rosbag playback has finished
                 rospy.loginfo("Rosbag playback finished. Shutting down...")
                 rospy.signal_shutdown("Rosbag playback finished")  # Shutdown ROS node
@@ -111,6 +140,8 @@ def run_slam(rosbag_file):
                 rosbag_process = subprocess.Popen(['roslaunch', 'turtlebot3_teleop', 'turtlebot3_teleop_key.launch'])
             else:
                 rosbag_process = subprocess.Popen(['rosbag', 'play', rosbag_file])
+                rviz = subprocess.Popen(['roslaunch', 'turtlebot3_gazebo', 'turtlebot3_gazebo_rviz.launch'])
+                
                 if not os.path.isfile(rosbag_file):
                     print(f"ERROR: The file {rosbag_file} does not exist.")
                     exit(1)

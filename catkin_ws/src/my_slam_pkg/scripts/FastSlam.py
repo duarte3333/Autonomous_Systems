@@ -5,9 +5,68 @@ import copy
 from aux_slam import resample, normalize_angle
 from Particule import Particle
 import tf.transformations
-
+import rospy
+from visualization_msgs.msg import Marker, MarkerArray
 
 class FastSlam:
+    def publish_landmarks(self):
+        marker_array = MarkerArray()
+        for landmark_id, landmark in self.particles[self.best_particle_ID].landmarks.items():
+            landmark_x , landmark_y = landmark.x, landmark.y
+
+            # Create a marker for the landmark
+            marker = Marker()
+            marker.header.frame_id = "map"
+            marker.header.stamp = rospy.Time.now()
+            marker.ns = "landmarks"
+            marker.id = int(landmark_id)
+            marker.type = Marker.SPHERE
+            marker.action = Marker.ADD
+            marker.pose.position.x = landmark_x
+            marker.pose.position.y = landmark_y
+            marker.pose.position.z = 0  # Assuming 2D landmarks
+            marker.pose.orientation.x = 0.0
+            marker.pose.orientation.y = 0.0
+            marker.pose.orientation.z = 0.0
+            marker.pose.orientation.w = 1.0
+            marker.scale.x = 0.2
+            marker.scale.y = 0.2
+            marker.scale.z = 0.2
+            marker.color.a = 1.0  # Don't forget to set the alpha!
+            marker.color.r = 0.0
+            marker.color.g = 255.0
+            marker.color.b = 0.0
+
+            # Add the marker to the array
+            marker_array.markers.append(marker)
+
+            # Create a marker for the text
+            text_marker = Marker()
+            text_marker.header.frame_id = "map"
+            text_marker.header.stamp = rospy.Time.now()
+            text_marker.ns = "landmark_text"
+            text_marker.id = int(landmark_id) + 1000  # Ensure unique ID for text
+            text_marker.type = Marker.TEXT_VIEW_FACING
+            text_marker.action = Marker.ADD
+            text_marker.pose.position.x = landmark_x
+            text_marker.pose.position.y = landmark_y
+            text_marker.pose.position.z = 0.5  # Slightly above the landmark
+            text_marker.pose.orientation.x = 0.0
+            text_marker.pose.orientation.y = 0.0
+            text_marker.pose.orientation.z = 0.0
+            text_marker.pose.orientation.w = 1.0
+            text_marker.scale.z = 0.4  # Text height
+            text_marker.color.a = 1.0  # Don't forget to set the alpha!
+            text_marker.color.r = 1.0
+            text_marker.color.g = 255.0
+            text_marker.color.b = 1.0
+            text_marker.text = f"id: {landmark_id}"
+
+            # Add the text marker to the array
+            marker_array.markers.append(text_marker)
+
+        # Publish the marker array
+        self.landmark_pub.publish(marker_array)
     def __init__(self,only_slam_window, window_size_pixel, sample_rate, size_m,central_bar_width, turtlebot_L,num_particles=50 , screen=None, resample_method="low variance",std_dev_motion = 0.5):
         
         self.SCREEN_WIDTH = window_size_pixel
@@ -53,12 +112,16 @@ class FastSlam:
         self.num_particles = num_particles
         self.particles = self.initialize_particles()
         self.best_particle_ID=-1
-
+        self.landmark_pub = rospy.Publisher('/landmarks', MarkerArray, queue_size=10)
+        rospy.init_node('aruco_slam')  # Initialize the ROS node
         self.update_screen()
 
         #initialize FastSlam variables
 
         return
+    
+    def get_best_particle(self):
+        return self.particles[self.best_particle_ID]
     
     def initialize_particles(self, landmarks={}):
         particles = []
@@ -150,6 +213,8 @@ class FastSlam:
             
             #print('landmark_id',landmark_id, ' pose: ', landmark_x ,' ,', landmark_y)
             pygame.draw.circle(self.screen, self.BLACK, (int(landmark_x* self.SCREEN_WIDTH/self.width_meters + self.left_coordinate + self.SCREEN_WIDTH/2), int(landmark_y* self.SCREEN_HEIGHT/self.height_meters+ self.SCREEN_HEIGHT/2)), 5)
+            import rospy
+            #self.image_sub = rospy.Publisher("/raspicam_node/image/compressed", CompressedImage, self.image_callback_wrapper)
             
             font = pygame.font.Font(None, 30)  
             text_surface = font.render("id:"+str(landmark_id), True, self.BLACK)  # Render text surface
