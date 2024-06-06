@@ -147,7 +147,7 @@ class ArucoSLAM:
     def get_trajectory(self):
         return self.my_slam.get_best_trajectory()
 
-def run_slam(rosbag_file, nr_map):
+def run_slam(rosbag_file, nr_map,file):
     rosbag_process = None
     if (rosbag_file == 'microsim'):
         rosbag_process = subprocess.Popen(['python3', '../micro_simulation/main.py'])
@@ -167,11 +167,14 @@ def run_slam(rosbag_file, nr_map):
                 
             rosbag_time = get_rosbag_duration(rosbag_file)
             slam = ArucoSLAM(rosbag_time)
-            gt = 0 
             slam.run()
-            ate, rpe, mse_landmarks = compute_metrics(slam, gt, nr_map)
-            print(f"Metrics for {rosbag_file}:")
-            print(f"ATE: {ate}, RPE: {rpe}, MSE Landmarks: {mse_landmarks}")
+            if nr_map == 5:
+                distance = compute_metrics(slam, nr_map,file)
+                print(f"The trajectory error for {rosbag_file} is: {distance}")
+            else:
+                ate, rpe, mse_landmarks = compute_metrics(slam, nr_map,file)
+                print(f"Metrics for {rosbag_file}:")
+                print(f"ATE: {ate}, RPE: {rpe}, MSE Landmarks: {mse_landmarks}")
         finally:
             if rosbag_process:
                 rosbag_process.terminate()
@@ -181,7 +184,7 @@ if __name__ == '__main__':
     parser.add_argument('rosbag', help="The rosbag file to run.")
     args = parser.parse_args()
     nr_map=None
-
+    file = args.rosbag
 
     if args.rosbag.endswith('.bag'):
         #print("entrei", args.rosbag)
@@ -199,6 +202,6 @@ if __name__ == '__main__':
     else:
         print("Invalid choice. Exiting.")
         exit(1)
-    run_slam(rosbag_file, nr_map)
+    run_slam(rosbag_file, nr_map,file)
 
     

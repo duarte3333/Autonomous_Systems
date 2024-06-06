@@ -1,6 +1,9 @@
 import numpy as np
 from sklearn.metrics import mean_squared_error 
 from scipy.spatial.transform import Rotation as R
+from scipy.interpolate import interp1d
+
+
 
 def horns_method(G, T):
     """"
@@ -155,6 +158,7 @@ def check_arraySize(A,B):
         B_new=B
 
     return A_new, B_new
+
 def show_metrics(ate_e, rpe_e, MSE_landmarks):
     print('Metrics:\n')
     print('ATE: ', ate_e)
@@ -174,11 +178,67 @@ def landmark_metrics(map_nr, slam):
     MSE_metric = MSE(slam_landmarks,landmarks_GroundTruth[1:3,:])
     return MSE_metric
 
-def compute_metrics(slam,ground_truth, map_nr):
-    #trajectory = slam.get_trajectory()
-    #trajectory = np.array(trajectory)
-    ate_e =0# ate(ground_truth, trajectory)
-    rpe_e = 0#rpe(ground_truth,trajectory)
+def parsing_txt(filename):
+    filepath = 'groundtruth/' + filename
+    with open(filepath, 'r') as file:
+        lines = file.readlines()
+
+        # Step 2: Convert each line to a tuple
+        tuple_list = []
+        for line in lines:
+            # Strip the newline character and any extra spaces
+            line = line.strip()
+            # Evaluate the line as a tuple
+            tuple_element = eval(line)
+            # Append to the list
+            tuple_list.append(tuple_element)
+
+        # Step 3: Convert the list of tuples to a NumPy array
+        groundtruth = np.array(tuple_list)
+    
+    return groundtruth
+
+def drop_rows(groundtruth, trajectory):
+    number_rows = len(groundtruth) - len(trajectory)
+    flag = 0
+    if number_rows >0: #groundtruth has more points
+        num_total_rows = groundtruth.shape[0]
+        random_indices = np.random.choice(num_total_rows, number_rows, replace=False)
+        groundtruth = np.delete(groundtruth, random_indices, axis=0)
+    elif number_rows <0: #trajectory has more points
+        num_total_rows = trajectory.shape[0]
+        random_indices = np.random.choice(num_total_rows, number_rows, replace=False)
+        trajectory = np.delete(trajectory, random_indices, axis=0)
+    return groundtruth, trajectory
+
+def trajectory_metrics(file,slam):
+    txt_file = file.replace('.bag', '.txt')
+    groundtruth  = parsing_txt(txt_file)
+    trajectory = slam.get_trajectory()
+    trajectory = np.array(trajectory)
+
+    groundtruth, trajectory = drop_rows(groundtruth, trajectory)
+
+    ate_e = ate(groundtruth, trajectory)
+    rpe_e = rpe(groundtruth, trajectory)
+
+    return ate_e, rpe_e
+
+def manual_distance(slam):
+    trajectory = slam.get_trajectory()
+    trajectory = np.array(trajectory)
+    first_point = trajectory[0,:2]
+    last_point = trajectory[-1,:2]
+    distance = np.linalg.norm(first_point - last_point)
+    error = abs(distance-4.04)
+    return error
+
+def compute_metrics(slam, map_nr,file):
+    if map_nr == 5:
+        error = manual_distance(slam)
+        return error
+    ate_e, rpe_e = trajectory_metrics(file, slam)
     MSE_landmarks = landmark_metrics(map_nr, slam)
+    
     #show_metrics(ate_e, rpe_e, MSE_landmarks)
     return ate_e, rpe_e, MSE_landmarks
