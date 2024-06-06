@@ -35,10 +35,10 @@ class Particle:
         self.trajectory.append((x,y,theta))
         delta_dist, delta_rot1, delta_rot2 = odometry_delta
 
-        alpha1=0.00001015
-        alpha2=0.00001015
-        alpha3=0.00001015
-        alpha4=0.0000101
+        alpha1=0.00008015 #
+        alpha2=0.00008
+        alpha3=0.00001
+        alpha4=0.00001
         deviation_dist = math.sqrt(alpha1 * delta_rot1**2 + alpha2 * delta_dist**2)
         deviation_rot1 = math.sqrt(alpha3 * delta_dist**2 + alpha4 * delta_rot1**2 + alpha4 * delta_rot2**2)
         deviation_rot2 = math.sqrt(alpha1 * delta_rot2**2 + alpha2 * delta_dist**2)
@@ -119,7 +119,7 @@ class Particle:
                           [dy / q, -dx / q, -1]])
             
             # Measurement noise covariance matrix (should be tuned)
-            Q = np.diag([0.2, 0.7])  # Example values
+            Q = np.diag([0.4, 0.4])  # Example values
 
             # Calculate the Kalman Gain
             S = J @ landmark.sigma @ J.T + Q  # Measurement prediction covariance

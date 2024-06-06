@@ -22,8 +22,8 @@ class FastSlam:
             marker.id = int(landmark_id)
             marker.type = Marker.SPHERE
             marker.action = Marker.ADD
-            marker.pose.position.x = landmark_x
-            marker.pose.position.y = landmark_y
+            marker.pose.position.x = -landmark_y
+            marker.pose.position.y = -landmark_x
             marker.pose.position.z = 0  # Assuming 2D landmarks
             marker.pose.orientation.x = 0.0
             marker.pose.orientation.y = 0.0
@@ -48,8 +48,8 @@ class FastSlam:
             text_marker.id = int(landmark_id) + 1000  # Ensure unique ID for text
             text_marker.type = Marker.TEXT_VIEW_FACING
             text_marker.action = Marker.ADD
-            text_marker.pose.position.x = landmark_x
-            text_marker.pose.position.y = landmark_y
+            text_marker.pose.position.x = -landmark_y
+            text_marker.pose.position.y = -landmark_x
             text_marker.pose.position.z = 0.5  # Slightly above the landmark
             text_marker.pose.orientation.x = 0.0
             text_marker.pose.orientation.y = 0.0
@@ -67,7 +67,7 @@ class FastSlam:
 
         # Publish the marker array
         self.landmark_pub.publish(marker_array)
-    def __init__(self,only_slam_window, window_size_pixel, sample_rate, size_m,central_bar_width, turtlebot_L,num_particles=50 , screen=None, resample_method="low variance",std_dev_motion = 0.5):
+    def __init__(self,only_slam_window, window_size_pixel, sample_rate, size_m,central_bar_width,OG_map_options,Occu_grid_pub, turtlebot_L,num_particles=50 , screen=None, resample_method="low variance",std_dev_motion = 0.5):
         
         self.SCREEN_WIDTH = window_size_pixel
         self.SCREEN_HEIGHT = window_size_pixel
@@ -111,14 +111,11 @@ class FastSlam:
         self.old_yaw = 0
         self.num_particles = num_particles
         self.best_particle_ID=-1
-<<<<<<< HEAD
-        self.OG_mapoptions = OG_mapoptions
+        self.OG_mapoptions = OG_map_options
         self.Occu_grid_pub=Occu_grid_pub
         self.particles = self.initialize_particles()
-=======
         self.landmark_pub = rospy.Publisher('/landmarks', MarkerArray, queue_size=10)
         rospy.init_node('aruco_slam')  # Initialize the ROS node
->>>>>>> rviz
         self.update_screen()
         #initialize FastSlam variables
         return
