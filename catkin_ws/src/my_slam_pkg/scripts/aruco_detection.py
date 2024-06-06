@@ -88,23 +88,22 @@ class ArucoSLAM:
             # Get best particle and broadcast odom to base_link
             best_particle = self.my_slam.get_best_particle()
             x, y, theta = best_particle.pose  # Access the pose property correctly
-            quaternion = tf.transformations.quaternion_from_euler(0, 0, theta-(np.pi/2))
+            quaternion = tf.transformations.quaternion_from_euler(0, 0, theta)
             br.sendTransform(
-                (-y,-x, 0),
+                (x, y, 0),
                 quaternion,
                 rospy.Time.now(),
                 "base_link",
                 "odom"
             )
-    def create_slam(self,Occu_grid_pub):
-        window_size_pixel=1200    #tamanho da janela 
+    def create_slam(self, Occu_grid_pub):
+        window_size_pixel=900    #tamanho da janela 
         sample_rate=5  #sample rate (Hz)
-        size_m = 7#float(input('What should be the size of the map? n x n (in meters). n is: '))
+        size_m = 10#float(input('What should be the size of the map? n x n (in meters). n is: '))
         central_bar_width=10
         turtlebot_L=0.287
         OG_map_options=(20,20,0.1) #width meters, height meters, resolution meters per cell
-        number_particles=20
-
+        number_particles=1
         self.my_slam = FastSlam(True, window_size_pixel, sample_rate, size_m, central_bar_width,OG_map_options,Occu_grid_pub, turtlebot_L,number_particles)
         self.count = 0
 
@@ -187,7 +186,6 @@ if __name__ == '__main__':
     if args.rosbag.endswith('.bag'):
         #print("entrei", args.rosbag)
         rosbag_file = f"../rosbag/{args.rosbag}"
-
         match = re.search(r"\d", args.rosbag) #this searches for the first digit of the name
         nr_map=int(match.group(0))
         if match:
