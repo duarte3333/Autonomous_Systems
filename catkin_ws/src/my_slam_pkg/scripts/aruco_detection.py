@@ -96,10 +96,10 @@ class ArucoSLAM:
                 "base_link",
                 "odom"
             )
-    def create_slam(self,Occu_grid_pub):
-        window_size_pixel=1200    #tamanho da janela 
+    def create_slam(self, Occu_grid_pub):
+        window_size_pixel=900    #tamanho da janela 
         sample_rate=5  #sample rate (Hz)
-        size_m = 7#float(input('What should be the size of the map? n x n (in meters). n is: '))
+        size_m = 10#float(input('What should be the size of the map? n x n (in meters). n is: '))
         central_bar_width=10
         turtlebot_L=0.287
         OG_map_options=(20,20,0.1) #width meters, height meters, resolution meters per cell
@@ -187,7 +187,6 @@ if __name__ == '__main__':
     if args.rosbag.endswith('.bag'):
         #print("entrei", args.rosbag)
         rosbag_file = f"../rosbag/{args.rosbag}"
-
         match = re.search(r"\d", args.rosbag) #this searches for the first digit of the name
         nr_map=int(match.group(0))
         if match:
