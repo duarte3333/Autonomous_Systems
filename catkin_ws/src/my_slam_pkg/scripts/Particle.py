@@ -39,6 +39,11 @@ class Particle:
         alpha2=0.00008
         alpha3=0.00001
         alpha4=0.00001
+        #alpha1=0.000000001 #
+        #alpha2=0.000000001
+        #alpha3=0.000000001
+        #alpha4=0.000000001
+
         deviation_dist = math.sqrt(alpha1 * delta_rot1**2 + alpha2 * delta_dist**2)
         deviation_rot1 = math.sqrt(alpha3 * delta_dist**2 + alpha4 * delta_rot1**2 + alpha4 * delta_rot2**2)
         deviation_rot2 = math.sqrt(alpha1 * delta_rot2**2 + alpha2 * delta_dist**2)

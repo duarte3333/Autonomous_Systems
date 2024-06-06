@@ -22,8 +22,8 @@ class FastSlam:
             marker.id = int(landmark_id)
             marker.type = Marker.SPHERE
             marker.action = Marker.ADD
-            marker.pose.position.x = -landmark_y
-            marker.pose.position.y = -landmark_x
+            marker.pose.position.x = -landmark_x
+            marker.pose.position.y = landmark_y
             marker.pose.position.z = 0  # Assuming 2D landmarks
             marker.pose.orientation.x = 0.0
             marker.pose.orientation.y = 0.0
@@ -48,8 +48,8 @@ class FastSlam:
             text_marker.id = int(landmark_id) + 1000  # Ensure unique ID for text
             text_marker.type = Marker.TEXT_VIEW_FACING
             text_marker.action = Marker.ADD
-            text_marker.pose.position.x = -landmark_y
-            text_marker.pose.position.y = -landmark_x
+            text_marker.pose.position.x = -landmark_x
+            text_marker.pose.position.y = landmark_y
             text_marker.pose.position.z = 0.5  # Slightly above the landmark
             text_marker.pose.orientation.x = 0.0
             text_marker.pose.orientation.y = 0.0

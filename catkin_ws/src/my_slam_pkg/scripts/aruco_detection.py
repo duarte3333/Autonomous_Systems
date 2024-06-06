@@ -88,9 +88,9 @@ class ArucoSLAM:
             # Get best particle and broadcast odom to base_link
             best_particle = self.my_slam.get_best_particle()
             x, y, theta = best_particle.pose  # Access the pose property correctly
-            quaternion = tf.transformations.quaternion_from_euler(0, 0, theta-(np.pi/2))
+            quaternion = tf.transformations.quaternion_from_euler(0, 0, theta-(np.pi))
             br.sendTransform(
-                (-y,-x, 0),
+                (-x,y, 0),
                 quaternion,
                 rospy.Time.now(),
                 "base_link",
@@ -103,7 +103,7 @@ class ArucoSLAM:
         central_bar_width=10
         turtlebot_L=0.287
         OG_map_options=(20,20,0.1) #width meters, height meters, resolution meters per cell
-        number_particles=20
+        number_particles=15
 
         self.my_slam = FastSlam(True, window_size_pixel, sample_rate, size_m, central_bar_width,OG_map_options,Occu_grid_pub, turtlebot_L,number_particles)
         self.count = 0
