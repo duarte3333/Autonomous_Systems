@@ -16,28 +16,28 @@ Before running ArucoSLAM, ensure you have the following software installed:
 
 ## How to Run
 
-    **Prepare the Rosbag Directory**
+  **Prepare the Rosbag Directory**
 
-    Create a folder named `rosbag` inside the `my_slam_pkg` folder. Place your rosbag files inside this `rosbag` folder.
+  Create a folder named `rosbag` inside the `my_slam_pkg` folder. Place your rosbag files inside this `rosbag` folder.
 
-    **Run the Program**
+  **Run the Program**
 
-    To run ArucoSLAM, use the following command:
+  To run ArucoSLAM, use the following command:
 
-    ```sh
-    python3 main.py <rosbag-file>
-    ```
+  ```sh
+  python3 main.py <rosbag-file>
+  ```
 
-    Replace `<rosbag-file>` with the name of the rosbag file located in the `rosbag` folder. For example:
+  Replace `<rosbag-file>` with the name of the rosbag file located in the `rosbag` folder. For example:
 
-    ```sh
-    python3 main.py example.bag
-    ```
+  ```sh
+  python3 main.py example.bag
+  ```
 
-    The script accepts the following arguments:
-    - `<rosbag-file>.bag`: Name of the rosbag in the rosbag folder
-    - `live`: For live teleoperation.
-    - `microsim`: For running microsimulation.
+  The script accepts the following arguments:
+  - `<rosbag-file>.bag`: Name of the rosbag in the rosbag folder
+  - `live`: For live teleoperation.
+  - `microsim`: For running microsimulation.
 
 ## Explanation of Parameters
 
