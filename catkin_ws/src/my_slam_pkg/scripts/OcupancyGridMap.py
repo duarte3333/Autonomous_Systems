@@ -21,7 +21,7 @@ class OcupancyGridMap:
         #self.l_occ = np.log(100)  # Log odds for occupied
         #self.l_free = np.log(1/100)  # Log odds for free
         self.logDecrement=np.log(0.1 / 0.9)/10
-
+        self.threshold=100
         
         self.l0 = 0                  # Log-odds for unknown (0.5 probability)
         # Initialize the occupancy grid with log-odds of zero (equiv. to 0.5 probability)
@@ -59,9 +59,10 @@ class OcupancyGridMap:
 
                 # Update grid cells along the line from robot to laser point
                 self.bresenham_update(robot_gx, robot_gy, laser_gx, laser_gy, distance)
-        self.grid = np.where(self.grid > 0, self.grid + self.logDecrement, self.grid)
-        self.grid[self.disappear_count > 500] = self.l0
-        self.disappear_count[self.disappear_count > 500] = 0
+        self.grid = np.where(self.grid > 0, self.grid + self.logDecrement, self.grid) #this helps the algorithm forget about past measurements fo occupied grid cells
+        
+        self.grid[self.disappear_count > self.threshold] = self.l0
+        self.disappear_count[self.disappear_count > self.threshold] = 0
 
 
 
