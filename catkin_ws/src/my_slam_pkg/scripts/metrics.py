@@ -124,11 +124,14 @@ def applyRT(matrix, Rot, T):
 
 def MSE(A,B):
     MSE_metric=0
+    count=0
     for i in range(A.shape[1]):
         #print('A ', A[0,i], A[1,i])
         #print('B ', B[0,i], B[1,i])
         #print('dist: ', (A[0,i]-B[0,i])**2 + (A[1,i]-B[1,i])**2)
         MSE_metric += (A[0,i]-B[0,i])**2 + (A[1,i]-B[1,i])**2
+        count+=1
+    
 
     return MSE_metric
 

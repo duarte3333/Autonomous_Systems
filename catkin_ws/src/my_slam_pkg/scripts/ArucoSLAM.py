@@ -26,16 +26,8 @@ from visualization_msgs.msg import Marker, MarkerArray
 
 
 class ArucoSLAM:
-    def odom_callback_wrapper(self, data):
-        odom_callback(self, data)
-
-    def image_callback_wrapper(self, data):
-        image_callback(self, data)
-
-    def lidar_callback_wrapper(self,data):
-        lidar_callback(self,data)
-
-    def __init__(self, rosbag_time):
+   
+    def __init__(self, rosbag_time, slam_variables, occupancy_map):
         self.image_callback = image_callback
         self.odom_callback = odom_callback
         self.k = rosbag_time + 5
@@ -46,7 +38,7 @@ class ArucoSLAM:
         rospy.loginfo('ArucoSLAM Node Started')
         rospy.init_node('aruco_slam') # Initialize the ROS node
         Occu_grid_pub = rospy.Publisher('/occupancy_grid', OccupancyGrid, queue_size=10)
-        self.create_slam(Occu_grid_pub)
+        self.create_slam(Occu_grid_pub, slam_variables)
 
         #subscribe node
         self.image_sub = rospy.Subscriber("/raspicam_node/image/compressed", CompressedImage, self.image_callback_wrapper)
@@ -56,7 +48,8 @@ class ArucoSLAM:
         self.odom =[0,0,0]
         self.bridge = CvBridge() # Initialize the CvBridge object
 
-        rospy.Subscriber('/scan', LaserScan, self.lidar_callback_wrapper)
+        if occupancy_map:
+            rospy.Subscriber('/scan', LaserScan, self.lidar_callback_wrapper)
 
         
         try: #The tag of our aruco dictionary is 4X4_100
@@ -66,14 +59,23 @@ class ArucoSLAM:
             self.aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_5X5_250) 
             print("2: ", self.aruco_dict)
 
-        #Do not change the tag used (cv2.aruco.DICT_4X4_100), only if we change the ArUcos we're using (and thus their tags) 
+        #Do not change the tag used (cv2.aruco.DICT_5X5_250), only if we change the ArUcos we're using (and thus their tags) 
         try:
             self.parameters = aruco.DetectorParameters_create()
-        except:
+        except:#for different versions of opencv
             self.parameters =  cv2.aruco.DetectorParameters()
         self.dict = {}
         self.map = {}
-        
+
+    def odom_callback_wrapper(self, data):
+        odom_callback(self, data)
+
+    def image_callback_wrapper(self, data):
+        image_callback(self, data)
+
+    def lidar_callback_wrapper(self,data):
+        lidar_callback(self,data)
+
     def publish_tf(self):
             # Broadcast map to odom
             br = tf.TransformBroadcaster()
@@ -96,16 +98,11 @@ class ArucoSLAM:
                 "base_link",
                 "odom"
             )
-    def create_slam(self, Occu_grid_pub):
-        window_size_pixel=900    #tamanho da janela 
-        sample_rate=5  #sample rate (Hz)
-        size_m = 10#float(input('What should be the size of the map? n x n (in meters). n is: '))
+    def create_slam(self, Occu_grid_pub,slam_variables): 
+        window_size_pixel,size_m,OG_map_options,number_particles,tunning_options=slam_variables
         central_bar_width=10
         turtlebot_L=0.287
-        OG_map_options=(20,20,0.1) #width meters, height meters, resolution meters per cell
-        number_particles=15
-
-        self.my_slam = FastSlam(True, window_size_pixel, sample_rate, size_m, central_bar_width,OG_map_options,Occu_grid_pub, turtlebot_L,number_particles)
+        self.my_slam = FastSlam(tunning_options,True, window_size_pixel, size_m, central_bar_width,OG_map_options,Occu_grid_pub, turtlebot_L,number_particles)
         self.count = 0
 
     def calibrate_camera(self):
@@ -148,61 +145,3 @@ class ArucoSLAM:
     def get_trajectory(self):
         return self.my_slam.get_best_trajectory()
 
-def run_slam(rosbag_file, nr_map,file):
-    rosbag_process = None
-    if (rosbag_file == 'microsim'):
-        rosbag_process = subprocess.Popen(['python3', '../micro_simulation/main.py'])
-        return
-              
-    if rosbag_file != 'microsim':
-        try:
-            if (rosbag_file == 'live'):
-                rosbag_process = subprocess.Popen(['roslaunch', 'turtlebot3_teleop', 'turtlebot3_teleop_key.launch'])
-            else:
-                rosbag_process = subprocess.Popen(['rosbag', 'play', rosbag_file])
-                rviz = subprocess.Popen(['roslaunch', 'turtlebot3_gazebo', 'turtlebot3_gazebo_rviz.launch'])
-                
-                if not os.path.isfile(rosbag_file):
-                    print(f"ERROR: The file {rosbag_file} does not exist.")
-                    exit(1)
-                
-            rosbag_time = get_rosbag_duration(rosbag_file)
-            slam = ArucoSLAM(rosbag_time)
-            slam.run()
-            if nr_map == 5:
-                distance = compute_metrics(slam, nr_map,file)
-                print(f"The trajectory error for {rosbag_file} is: {distance}")
-            else:
-                ate, rpe, mse_landmarks = compute_metrics(slam, nr_map,file)
-                print(f"Metrics for {rosbag_file}:")
-                print(f"ATE: {ate}, RPE: {rpe}, MSE Landmarks: {mse_landmarks}")
-        finally:
-            if rosbag_process:
-                rosbag_process.terminate()
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Select a rosbag to run.")
-    parser.add_argument('rosbag', help="The rosbag file to run.")
-    args = parser.parse_args()
-    nr_map=None
-    file = args.rosbag
-
-    if args.rosbag.endswith('.bag'):
-        #print("entrei", args.rosbag)
-        rosbag_file = f"../rosbag/{args.rosbag}"
-        match = re.search(r"\d", args.rosbag) #this searches for the first digit of the name
-        nr_map=int(match.group(0))
-        if match:
-            print("Map found:", nr_map)
-        else:
-            print("No map found")
-    elif args.rosbag == 'live':
-        rosbag_file = 'live'
-    elif args.rosbag == 'microsim':
-        rosbag_file = 'microsim'
-    else:
-        print("Invalid choice. Exiting.")
-        exit(1)
-    run_slam(rosbag_file, nr_map,file)
-
-    

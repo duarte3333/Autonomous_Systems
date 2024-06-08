@@ -9,6 +9,58 @@ import rospy
 from visualization_msgs.msg import Marker, MarkerArray
 
 class FastSlam:
+    def __init__(self,tuning_option, only_slam_window, window_size_pixel, size_m,central_bar_width,OG_map_options,Occu_grid_pub, turtlebot_L,num_particles=50, screen=None, resample_method="low variance"):
+        
+        self.tuning_options=tuning_option
+        self.SCREEN_WIDTH = window_size_pixel
+        self.SCREEN_HEIGHT = window_size_pixel
+        self.only_slam_window=only_slam_window
+        self.central_bar_width=central_bar_width
+
+        if screen==None:
+            pygame.init()
+            pygame.display.init()
+            screen = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
+            pygame.display.set_caption("TurtleBot3 Slam predictions")
+            self.left_coordinate = 0
+            self.right_coordinate=self.SCREEN_WIDTH
+            
+        elif only_slam_window:
+            self.left_coordinate = 0
+            self.right_coordinate=self.SCREEN_WIDTH
+        else:
+            self.left_coordinate = central_bar_width + self.SCREEN_WIDTH
+            self.right_coordinate=self.SCREEN_WIDTH+self.left_coordinate+self.central_bar_width
+        
+        self.resample_method=resample_method
+        # Define colors
+        self.BLACK = (0, 0, 0)
+        self.WHITE = (255, 255, 255)
+        self.GREEN = (0, 160, 0)
+        self.BLUE=(10,10,255)
+        self.RED=(170,0,0)
+
+        # Set up the screen
+        self.screen = screen      
+        self.width_meters=size_m 
+        self.height_meters=size_m
+        self.turtlebot_radius=0.105
+        self.turtlebot_L=turtlebot_L
+ 
+        self.turtlebot_radius_pixel =self.turtlebot_radius * self.SCREEN_WIDTH/self.width_meters #from turtlebot website
+
+        self.old_odometry = [0.0,0.0]
+        self.old_yaw = 0
+        self.num_particles = num_particles
+        self.best_particle_ID=-1
+        self.OG_mapoptions = OG_map_options
+        self.Occu_grid_pub=Occu_grid_pub
+        self.particles = self.initialize_particles()
+        self.landmark_pub = rospy.Publisher('/landmarks', MarkerArray, queue_size=10)
+        rospy.init_node('aruco_slam')  # Initialize the ROS node
+        self.update_screen()
+        #initialize FastSlam variables
+        return
     def publish_landmarks(self):
         marker_array = MarkerArray()
         for landmark_id, landmark in self.particles[self.best_particle_ID].landmarks.items():
@@ -67,59 +119,7 @@ class FastSlam:
 
         # Publish the marker array
         self.landmark_pub.publish(marker_array)
-    def __init__(self,only_slam_window, window_size_pixel, sample_rate, size_m,central_bar_width,OG_map_options,Occu_grid_pub, turtlebot_L,num_particles=50 , screen=None, resample_method="low variance",std_dev_motion = 0.5):
-        
-        self.SCREEN_WIDTH = window_size_pixel
-        self.SCREEN_HEIGHT = window_size_pixel
-        self.only_slam_window=only_slam_window
-        self.central_bar_width=central_bar_width
-
-        if screen==None:
-            pygame.init()
-            pygame.display.init()
-            screen = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
-            pygame.display.set_caption("TurtleBot3 Slam predictions")
-            self.left_coordinate = 0
-            self.right_coordinate=self.SCREEN_WIDTH
-            
-        elif only_slam_window:
-            self.left_coordinate = 0
-            self.right_coordinate=self.SCREEN_WIDTH
-        else:
-            self.left_coordinate = central_bar_width + self.SCREEN_WIDTH
-            self.right_coordinate=self.SCREEN_WIDTH+self.left_coordinate+self.central_bar_width
-        
-        self.std_dev_motion = std_dev_motion
-        self.resample_method=resample_method
-        # Define colors
-        self.BLACK = (0, 0, 0)
-        self.WHITE = (255, 255, 255)
-        self.GREEN = (0, 160, 0)
-        self.BLUE=(10,10,255)
-        self.RED=(170,0,0)
-
-        # Set up the screen
-        self.screen = screen      
-        self.width_meters=size_m 
-        self.height_meters=size_m
-        self.turtlebot_radius=0.105
-        self.turtlebot_L=turtlebot_L
- 
-        self.turtlebot_radius_pixel =self.turtlebot_radius * self.SCREEN_WIDTH/self.width_meters #from turtlebot website
-
-        self.old_odometry = [0.0,0.0]
-        self.old_yaw = 0
-        self.num_particles = num_particles
-        self.best_particle_ID=-1
-        self.OG_mapoptions = OG_map_options
-        self.Occu_grid_pub=Occu_grid_pub
-        self.particles = self.initialize_particles()
-        self.landmark_pub = rospy.Publisher('/landmarks', MarkerArray, queue_size=10)
-        rospy.init_node('aruco_slam')  # Initialize the ROS node
-        self.update_screen()
-        #initialize FastSlam variables
-        return
-    
+  
     def get_best_particle(self):
         return self.particles[self.best_particle_ID]
     
@@ -131,7 +131,7 @@ class FastSlam:
             y = 0#np.random.uniform(0, self.height_meters)
             theta = 0#np.random.uniform(0, 2 * np.pi)
             pose = np.array([x, y, theta])
-            particles.append(Particle(pose,self.num_particles, self.turtlebot_L,self.OG_mapoptions,self.std_dev_motion ))
+            particles.append(Particle(pose,self.num_particles, self.turtlebot_L,self.OG_mapoptions,self.tuning_options ))
 
         return particles
     

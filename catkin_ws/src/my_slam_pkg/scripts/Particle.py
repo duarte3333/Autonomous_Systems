@@ -13,18 +13,20 @@ class Particle:
         landmarks: list of landmarks in the map
         weight: weight of the particle"""
         
-    def __init__(self, pose,nr_particles,turtlebot_L,map_options,std_dev_motion=0.2 ,is_turtlebot=False):
+    def __init__(self, pose,nr_particles,turtlebot_L,map_options,tuning_option ,is_turtlebot=False):
         self.pose = pose
         self.is_turtlebot = is_turtlebot
         self.landmarks = {}
         self.weight = 1.0
-        self.std_dev_motion = std_dev_motion
         self.turtlebot_L=turtlebot_L
         self.observation_vector = np.zeros((2,1))
         self.default_weight=1/nr_particles
         self.J_matrix = np.zeros((2,2))
         self.adjusted_covariance = np.zeros((2,2))
         self.trajectory = []
+        self.Q_init=tuning_option[0]
+        self.Q_update=tuning_option[1]
+        self.alphas=tuning_option[2]       
         self.OG_map = OcupancyGridMap(map_options[0], map_options[1], map_options[2])#width, height and resolution
 
 
@@ -35,14 +37,14 @@ class Particle:
         self.trajectory.append((x,y,theta))
         delta_dist, delta_rot1, delta_rot2 = odometry_delta
 
-        alpha1=0.00008015 #
-        alpha2=0.00008
-        alpha3=0.00001
-        alpha4=0.00001
-        #alpha1=0.000000001 #
-        #alpha2=0.000000001
-        #alpha3=0.000000001
-        #alpha4=0.000000001
+        #alpha1=0.00008 #
+        #alpha2=0.00008
+        #alpha3=0.00001
+        #alpha4=0.00001
+        alpha1=self.alphas[0]
+        alpha2=self.alphas[1]
+        alpha3=self.alphas[2]
+        alpha4=self.alphas[3]
 
         deviation_dist = math.sqrt(alpha1 * delta_rot1**2 + alpha2 * delta_dist**2)
         deviation_rot1 = math.sqrt(alpha3 * delta_dist**2 + alpha4 * delta_rot1**2 + alpha4 * delta_rot2**2)
@@ -91,7 +93,7 @@ class Particle:
         #J = J.reshape(3, 3)
         
         # Measurement noise covariance matrix (should be tuned)
-        Q = np.diag([0.1, 0.1])  # Example values , Q is Q_t in the book
+        Q = self.Q_init #np.diag([0.1, 0.1])  # Example values , Q is Q_t in the book
         S = J @ self.landmarks[landmark_id].sigma @ J.T + Q
         K = self.landmarks[landmark_id].sigma @ J.T @ np.linalg.inv(S)
         self.landmarks[landmark_id].sigma = (np.eye(3) - K @ J) @ self.landmarks[landmark_id].sigma
@@ -124,7 +126,7 @@ class Particle:
                           [dy / q, -dx / q, -1]])
             
             # Measurement noise covariance matrix (should be tuned)
-            Q = np.diag([0.4, 0.4])  # Example values
+            Q = self.Q_update #np.diag([0.7, 0.7])  # Example values
 
             # Calculate the Kalman Gain
             S = J @ landmark.sigma @ J.T + Q  # Measurement prediction covariance
