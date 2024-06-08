@@ -26,17 +26,22 @@ def odom_callback(data):
     global x, y, theta
     global trajectory_x, trajectory_y
     global theta_prime
+    
+    # Extract the pose from the odometry data
     pose = data.pose.pose
     x = pose.position.x
     y = pose.position.y
     
-    # Convert quaternion to euler
+    # Convert quaternion to euler angles to get yaw (theta)
     orientation_q = pose.orientation
     orientation_list = [orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w]
     (roll, pitch, theta) = tf.transformations.euler_from_quaternion(orientation_list)
     
+    # Normalize the yaw angle
     theta = normalize_angle(theta)
     print('YAW IS', theta)
+    
+    # Initialize previous values if not already done
     if prev_x is None:
         prev_x = x
         prev_y = y
@@ -44,36 +49,36 @@ def odom_callback(data):
         return
 
     # Algorithm parameters
-    alpha1=0.00001
-    alpha2=0.00001
-    alpha3=0.00001
-    alpha4=0.00001
+    alpha1 = 0.00001
+    alpha2 = 0.00001
+    alpha3 = 0.00001
+    alpha4 = 0.00001
 
-    # Step 2
+    # Step 2: Compute the first rotation
     delta_rot1 = normalize_angle(atan2(y - prev_y, x - prev_x) - prev_theta)
 
-    # Step 3
+    # Step 3: Compute the translation
     delta_trans = sqrt((prev_x - x)**2 + (prev_y - y)**2)
 
-    # Step 4
+    # Step 4: Compute the second rotation
     delta_rot2 = normalize_angle(theta - prev_theta - delta_rot1)
 
-    # Step 5
+    # Step 5: Add noise to the first rotation
     delta_rot1_hat = delta_rot1 - sample(alpha1 * delta_rot1**2 + alpha2 * delta_trans**2)
 
-    # Step 6
+    # Step 6: Add noise to the translation
     delta_trans_hat = delta_trans - sample(alpha3 * delta_trans**2 + alpha4 * delta_rot1**2 + alpha4 * delta_rot2**2)
 
-    # Step 7
+    # Step 7: Add noise to the second rotation
     delta_rot2_hat = delta_rot2 - sample(alpha1 * delta_rot2**2 + alpha2 * delta_trans**2)
 
-    # Step 8
+    # Step 8: Compute the new x position
     x_prime = prev_x + delta_trans_hat * cos(prev_theta + delta_rot1_hat)
 
-    # Step 9
+    # Step 9: Compute the new y position
     y_prime = prev_y + delta_trans_hat * sin(prev_theta + delta_rot1_hat)
 
-    # Step 10
+    # Step 10: Compute the new orientation
     theta_prime = normalize_angle(prev_theta + delta_rot1_hat + delta_rot2_hat)
 
     # Update previous state
@@ -86,9 +91,9 @@ def odom_callback(data):
     trajectory_y.append(y_prime)
 
     # Print or publish the updated state as needed
-    #rospy.loginfo(f"Updated state: x = {x_prime}, y = {y_prime}, theta = {theta_prime}")
+    # rospy.loginfo(f"Updated state: x = {x_prime}, y = {y_prime}, theta = {theta_prime}")
 
-# Initialize node
+# Initialize the ROS node
 rospy.init_node('motion_model_odometry')
 
 # Initialize global variables
@@ -103,27 +108,29 @@ theta = None
 trajectory_x = []
 trajectory_y = []
 
-# Subscribe to /odom topic
+# Subscribe to the /odom topic
 rospy.Subscriber('/odom', Odometry, odom_callback)
 
-# Plotting setup
+# Plotting setup using matplotlib
 plt.ion()
 fig, ax = plt.subplots()
 line, = ax.plot([], [], 'r-')  # Line object for trajectory
 
+# Robot shape (circle and triangle) for visualization
 robot_circle = patches.Circle((0, 0), 0.1, fc='blue')
 robot_triangle = patches.Polygon([[0, 0], [0, 0], [0, 0]], closed=True, fc='blue')
 
 ax.add_patch(robot_circle)
 ax.add_patch(robot_triangle)
 
+# Set plot limits and labels
 ax.set_xlim(-10, 10)  # Set the x-axis limits
 ax.set_ylim(-10, 10)  # Set the y-axis limits
 ax.set_xlabel('X')
 ax.set_ylabel('Y')
 ax.set_title('Robot Trajectory')
 
-# Function to update the plot
+# Function to update the plot with new trajectory data
 def update_plot():
     if trajectory_x and trajectory_y:  # Check if lists are not empty
         line.set_data(trajectory_x, trajectory_y)
@@ -146,7 +153,7 @@ def update_plot():
     fig.canvas.draw()
     fig.canvas.flush_events()
 
-# Main loop
+# Main loop to keep the plot updated
 rate = rospy.Rate(10)  # 10 Hz
 while not rospy.is_shutdown():
     update_plot()
