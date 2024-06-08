@@ -92,7 +92,7 @@ def landmarks_PoseMeasured(map_nr):
         x=np.array([0.65,0.64,2.74,0,2.74])
         y=np.array([5.5,-0.05,1.41,0.78,0.31])
     else:
-        print('Not a valid map nr (must be either 1, 2,3,4). MSE is going to be not valid')
+        print('Not a valid map nr (must be either 1, 2,3,4). SSE is not going to be valid')
         x=np.array([0,0,0,0,0])
         y=np.array([0,0,0,0,0])
     IDS=np.array([15, 53,60,77,100])
@@ -122,18 +122,18 @@ def applyRT(matrix, Rot, T):
     return rotated_matrix + T
 
 
-def MSE(A,B):
-    MSE_metric=0
+def SSE(A,B):
+    SSE_metric=0
     count=0
     for i in range(A.shape[1]):
         #print('A ', A[0,i], A[1,i])
         #print('B ', B[0,i], B[1,i])
         #print('dist: ', (A[0,i]-B[0,i])**2 + (A[1,i]-B[1,i])**2)
-        MSE_metric += (A[0,i]-B[0,i])**2 + (A[1,i]-B[1,i])**2
+        SSE_metric += (A[0,i]-B[0,i])**2 + (A[1,i]-B[1,i])**2
         count+=1
     
 
-    return MSE_metric
+    return SSE_metric
 
 def remove_columns(A_to_remove,B):
     to_remove=[]
@@ -161,14 +161,6 @@ def check_arraySize(A,B):
 
     return A_new, B_new
 
-def show_metrics(ate_e, rpe_e, MSE_landmarks):
-    print('Metrics:\n')
-    print('ATE: ', ate_e)
-    print('RPT: ',rpe_e)
-    print('Minimum possible MSE between map and landmarks: ', MSE_landmarks)
-    print('---Metrics completed---\n')
-
-
 def landmark_metrics(map_nr, slam):
     slam_landmarks= slam.my_slam.get_BestLandmarks()
     landmarks_GroundTruth=landmarks_PoseMeasured(map_nr)
@@ -177,8 +169,8 @@ def landmark_metrics(map_nr, slam):
     Rot,T=SVD_rigidTransform(slam_landmarks[1:3,:],landmarks_GroundTruth[1:3,:])
     slam_landmarks = applyRT(slam_landmarks[1:3,:], Rot, T)
 
-    MSE_metric = MSE(slam_landmarks,landmarks_GroundTruth[1:3,:])
-    return MSE_metric
+    SSE_metric = SSE(slam_landmarks,landmarks_GroundTruth[1:3,:])
+    return SSE_metric
 
 def parsing_txt(filename):
     filepath = 'groundtruth/' + filename
@@ -240,7 +232,7 @@ def compute_metrics(slam, map_nr,file):
         error = manual_distance(slam)
         return error
     ate_e, rpe_e = trajectory_metrics(file, slam)
-    MSE_landmarks = landmark_metrics(map_nr, slam)
+    SSE_landmarks = landmark_metrics(map_nr, slam)
     
-    #show_metrics(ate_e, rpe_e, MSE_landmarks)
-    return ate_e, rpe_e, MSE_landmarks
+    #show_metrics(ate_e, rpe_e, SSE_landmarks)
+    return ate_e, rpe_e, SSE_landmarks

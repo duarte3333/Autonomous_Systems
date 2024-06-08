@@ -26,9 +26,9 @@ def run_slam(rosbag_file, nr_map,file,slam_variables,occupancy_map):
                 distance = compute_metrics(slam, nr_map,file)
                 print(f"The trajectory error for {rosbag_file} is: {distance}")
             else:
-                ate, rpe, mse_landmarks = compute_metrics(slam, nr_map,file)
+                ate, rpe, sse_landmarks = compute_metrics(slam, nr_map,file)
                 print(f"Metrics for {rosbag_file}:")
-                print(f"ATE: {ate}, RPE: {rpe}, MSE Landmarks: {mse_landmarks}")
+                print(f"ATE: {ate}, RPE: {rpe}, SSE Landmarks: {sse_landmarks}")
         finally:
             if rosbag_process:
                 rosbag_process.terminate()
@@ -38,7 +38,7 @@ def variables():
     window_size_pixel=900    #pixel size of window
     size_window = 10 # in meters
     OG_map_options=(20,20,0.1) #width meters, height meters, resolution meters per cell
-    number_particles=50
+    number_particles=25
     Q_init=np.diag([0.1,0.1])
     Q_update=np.diag([0.7,0.7])
     alphas=[0.00008,0.00008,0.00001,0.00001]
