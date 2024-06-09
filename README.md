@@ -1,5 +1,19 @@
 # FastSLAM
 
+## Introduction
+
+In this project the group made an implementation of the Fast-SLAM algorithm on a Turtlebot3 robot using ArUco markers
+as landmarks. We created a micro-simulation environment for algorithm testing, developed an ArUco detection algorithm,
+and fine-tuned key parameters to optimize performance. As an additional contribution, an Occupancy Grid Mapping algorithm
+was integrated, as well as RViz visualization. To evaluate the algorithm, metrics were computed with regards to both the
+trajectory and the map for different environments and used to fine-tune and validate the algorithm. The obtained results were
+good and consistent over several runs of the same and similar ROSBags.
+
+<p align="center">
+	  <img src="https://github.com/duarte3333/Autonomous_Systems/assets/76222459/2aa919d7-366e-4dad-b98e-ff4f8155fa1a" data-canonical-src="https://github.com/duarte3333/CppModules/assets/76222459/5c6635f0-99b0-4c58-a0b6-63cc38a27e41.png" width=70% />
+</p>
+
+
 ## Prerequisites
 
 Before running ArucoSLAM, ensure you have the following software installed:
