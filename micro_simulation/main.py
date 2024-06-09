@@ -23,7 +23,7 @@ def init_variables():
     Odometry_noise= True  #Gausian noise na odometria
     landmark_noise=True
     only_slam_window=False
-    window_size_pixel=1000    #tamanho da janela
+    window_size_pixel=700    #tamanho da janela
     sample_rate=100  #sample rate (Hz)
     size_m = 3#float(input('What should be the size of the map? n x n (in meters). n is: '))
     nr_landmarks =5# int(input('How many random arucu landmarks do you want in your map?'))

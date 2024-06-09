@@ -1,0 +1,8 @@
+prefix=/home/alexandre/Documents/Git_Saut/Autonomous_Systems/catkin_ws/devel
+
+Name: turtlebot3_fastslam
+Description: Description of turtlebot3_fastslam
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: roscpp rospy std_msgs cv_bridge image_transport sensor_msgs geometry_msgs nav_msgs

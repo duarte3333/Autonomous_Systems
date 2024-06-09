@@ -1,0 +1,17 @@
+<launch>
+    <!-- FastSLAMNode -->
+    <node name="FastSLAMNode" pkg="turtlebot3_fastslam" type="main.py" output="screen">
+        <param name="rosbag" value="$(arg rosbag)"/>
+    </node>
+
+    <!-- Play Rosbag Node -->
+    <node name="rosbag_player" pkg="rosbag" type="play" args="$(find turtlebot3_fastslam)/src/rosbag/$(arg rosbag)">
+        <param name="loop" value="false"/> <!-- Set to true if you want to loop the bag -->
+    </node>
+
+    <!-- RViz Node -->
+    <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_gazebo_rviz.launch"/>
+    
+    <!-- Argument for Rosbag -->
+    <arg name="rosbag" default="Mapa4_2.bag"/>
+</launch>

@@ -18,26 +18,29 @@ Before running ArucoSLAM, ensure you have the following software installed:
 
   **Prepare the Rosbag Directory**
 
-  Create a folder named `rosbag` inside the `my_slam_pkg` folder. Place your rosbag files inside this `rosbag` folder.
+  Place your rosbag files inside this `rosbag` folder, at /Grupo25_SAUT/catkin_ws/src/turtlebot3_fastslam/src/rosbag
 
   **Run the Program**
 
-  To run ArucoSLAM, use the following command:
+  To run the FastSLAM algorithm, use the following command:
 
   ```sh
-  python3 main.py <rosbag-file>
+  roslaunch turtlebot3_fastslam my_launch.launch rosbag:= <rosbag-file>
   ```
-
   Replace `<rosbag-file>` with the name of the rosbag file located in the `rosbag` folder. For example:
 
   ```sh
-  python3 main.py example.bag
+  roslaunch turtlebot3_fastslam my_launch.launch rosbag:= <Mapa4_2.bag>
   ```
 
   The script accepts the following arguments:
   - `<rosbag-file>.bag`: Name of the rosbag in the rosbag folder
-  - `live`: For live teleoperation.
-  - `microsim`: For running microsimulation.
+
+  In order to observe the output of the FastSLAM algorithm in RVIZ, you should add to RVIZ the following topics:
+    /landmarks
+    /occupancy_grid
+    /raspicam_node/image
+
 
 ## Explanation of Parameters
 
@@ -53,10 +56,13 @@ Before running ArucoSLAM, ensure you have the following software installed:
 - **Occupancy Map:**
   - `occupancy_map`: Boolean flag to indicate whether to use occupancy mapping.
 
-## Example Command
+## How to Run Micro-Simulation
+  **Run the Program**
+  Acess the directory: /Grupo25_SAUT/micro_simulation
 
-To run the SLAM process with a specific rosbag file, use:
+  To run the microsimulation and FastSLAM algorithm, use the following command:
 
-```sh
-python3 aruco_slam.py example.bag
-```
+  ```sh
+  python3 main.py
+  ```
+  To move robot use arrow keys, and space; or WXAD and S keys. To exit, press ESC
